@@ -4,6 +4,9 @@ $(document).ready(() => {
         event.preventDefault();
         console.log("submitted login to https://gogobackend.azurewebsites.net/api/user/login/" + $("input[name='username'").val());
         $.ajax({
+            beforeSend: function (request) {
+                request.setRequestHeader("Authorization", "Negotiate");
+            },
             method: "POST",
             url: "https://gogobackend.azurewebsites.net/api/user/login/" + $("input[name='username'").val(),
             data: {

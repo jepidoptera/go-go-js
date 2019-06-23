@@ -78,8 +78,8 @@ export default (() => {
             icosa.rotateOnWorldAxis(axis, -deltaY / 100);
             axis = new THREE.Vector3(0, -Math.abs(deltaX), 0).normalize();
             icosa.rotateOnWorldAxis(axis, deltaX / 100);
-            console.log("rotated on:", axis);
-            console.log("position: ", icosa.position);
+            // console.log("rotated on:", axis);
+            // console.log("position: ", icosa.position);
             // icosa.rotation.x += 0.01;
             // icosa.rotation.y += 0.01;
         }

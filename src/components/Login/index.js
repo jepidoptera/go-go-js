@@ -1,7 +1,6 @@
 import React from 'react';
 import "./login.css";
 import "./login.js";
-var $ = require("jquery");
 
 export default function (props) {
     return (

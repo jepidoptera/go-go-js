@@ -135,10 +135,10 @@ export default {
                 let n2 = geometry.vertices[pentagons[i].neighbors[(j + 1) % 5]];
                 // find the one neighbor these two have in common
                 // that vertex will also be a hex center
-                console.log("two adjacent verticies,", n1.index, "and", n2.index);
-                if (!$.inArray(geometry.vertices[i].neighbors[j], n2)) {
-                    console.log("n1 is not in n2!");
-                }
+                // console.log("two adjacent verticies,", n1.index, "and", n2.index);
+                // if (!$.inArray(geometry.vertices[i].neighbors[j], n2)) {
+                //     console.log("n1 is not in n2!");
+                // }
                 var common = $.grep(n1.neighbors, function (element) {
                     return $.inArray(element, n2.neighbors) !== -1;
                 });
