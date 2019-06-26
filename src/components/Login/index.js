@@ -6,7 +6,9 @@ export default function (props) {
     return (
         <div>
             <h3>Please enter your username and password.</h3>
-            <form id="loginCredentials">
+            {/* https://gogobackend.azurewebsites.net */}
+            {/* localhost:56533 */}
+            <form action= "localhost:56533/api/user/all" id="loginCredentials" method="get" >
                 <input type="text" name="username"></input> <br></br>
                 <input type="password" name="password"></input> <br></br>
                 <input type="submit"></input>

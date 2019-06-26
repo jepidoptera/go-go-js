@@ -1,6 +1,7 @@
 // jshint multistr: true
 import * as THREE from 'three';
 import textureImage from "../../images/sideline.png";
+import hexaSphere from "../../models/hexasphere2.json"
 var $ = require("jquery");
 
 // let's try some tests
@@ -15,62 +16,131 @@ export default {
         return cube;
     },
 
-    icosahedron: function () {
+    icosahedron: function() {
+        // we will return an array of meshes
+        var meshes = [];
+
+        // load a texture to use for all meshes
+        var loader = new THREE.TextureLoader();
+        
+        var material = new THREE.MeshPhongMaterial({
+            map: loader.load(
+                // resource URL
+                textureImage),
+            polygonOffset: true,
+            polygonOffsetFactor: 1, // positive value pushes polygon further away
+            polygonOffsetUnits: 1
+        });
+
+        // load all meshes from file
+        hexaSphere.meshes.forEach((mesh, i) => {
+            var geometry = new THREE.Geometry();
+            // load vertices
+            mesh.vertices.forEach(vertex => {
+                geometry.vertices.push(new THREE.Vector3(vertex.x, vertex.y, vertex.z));
+            });
+            // faces
+            for (let i = 0; i < mesh.faces.length; i += 3) {
+                geometry.faces.push(new THREE.Face3(mesh.faces[i], mesh.faces[i+1], mesh.faces[i+2]));
+            }
+            // calculate the normals automatically
+            geometry.computeFaceNormals();
+            geometry.computeVertexNormals();
+            geometry.verticesNeedUpdate = true;
+            
+            // console.log(mesh);
+            meshes[i] = new THREE.Object3D();
+            meshes[i].add (new THREE.Mesh(geometry));
+            // wireframe
+            let geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
+            let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+            let wireframe = new THREE.LineSegments(geo, mat);
+            meshes[i].add(wireframe);        
+        })
+        console.log(meshes);
+        return meshes;
+    },
+    
+    icosahedron_scratch: function () {
         // building an icosahedron from scratch
         // more complicated
-        // var geometry = new THREE.Geometry();
-        // let normals = [];
+        var geometry = new THREE.Geometry();
+        let normals = [];
 
-        // // 0 is the "top"
-        // normals[0] = new THREE.Vector3(0, 1, 0);
-        // let radius = 0.5 / Math.sin(0.2 * Math.PI);
-        // let elevation = Math.sin(Math.acos(radius));
-        // // 1-10 are the "sides"
-        // for (let i = 0; i < 5; i++)
-        // {
-        //     let angle = 0.4 * i * Math.PI;
-        //     let offset = 0.2 * Math.PI;
-        //     normals[i + 1] = new THREE.Vector3(Math.sin(angle) * radius, 1 - elevation, Math.cos(angle) * radius);
-        //     normals[i + 6] = new THREE.Vector3(Math.sin(angle + offset) * radius, -1 + elevation, Math.cos(angle + offset) * radius);
-        //     normals[i + 1] = (normals[i + 1]).normalize();
-        //     normals[i + 6] = (normals[i + 6]).normalize();
-        // }
-        // // 11 is the "bottom"
-        // normals[11] = new THREE.Vector3(0, -1, 0);
+        // 0 is the "top"
+        normals[0] = new THREE.Vector3(0, 1, 0);
+        let radius = 0.5 / Math.sin(0.2 * Math.PI);
+        let elevation = Math.sin(Math.acos(radius));
+        // 1-10 are the "sides"
+        for (let i = 0; i < 5; i++)
+        {
+            let angle = 0.4 * i * Math.PI;
+            let offset = 0.2 * Math.PI;
+            normals[i + 1] = new THREE.Vector3(Math.sin(angle) * radius, 1 - elevation, Math.cos(angle) * radius);
+            normals[i + 6] = new THREE.Vector3(Math.sin(angle + offset) * radius, -1 + elevation, Math.cos(angle + offset) * radius);
+            normals[i + 1] = (normals[i + 1]).normalize();
+            normals[i + 6] = (normals[i + 6]).normalize();
+        }
+        // 11 is the "bottom"
+        normals[11] = new THREE.Vector3(0, -1, 0);
 
-        // geometry.vertices = geometry.vertices.concat(normals);
+        geometry.vertices = geometry.vertices.concat(normals);
 
-        // // check out its data structure
-        // console.log(geometry.vertices);
+        // check out its data structure
+        console.log(geometry.vertices);
 
-        // geometry.faces.push(
-        //     // "top" pentagon
-        //     new THREE.Face3(0, 1, 2),
-        //     new THREE.Face3(0, 2, 3),
-        //     new THREE.Face3(0, 3, 4),
-        //     new THREE.Face3(0, 4, 5),
-        //     new THREE.Face3(0, 5, 1),
-        //     // "sides"
-        //     new THREE.Face3(6, 2, 1),
-        //     new THREE.Face3(7, 3, 2),
-        //     new THREE.Face3(8, 4, 3),
-        //     new THREE.Face3(9, 5, 4),
-        //     new THREE.Face3(10, 1, 5),
-        //     // more "sides"
-        //     new THREE.Face3(6, 7, 2),
-        //     new THREE.Face3(7, 8, 3),
-        //     new THREE.Face3(8, 9, 4),
-        //     new THREE.Face3(9, 10, 5),
-        //     new THREE.Face3(10, 6, 1),
-        //     // "bottom" pentagon
-        //     new THREE.Face3(11, 10, 9),
-        //     new THREE.Face3(11, 9, 8),
-        //     new THREE.Face3(11, 8, 7),
-        //     new THREE.Face3(11, 7, 6),
-        //     new THREE.Face3(11, 6, 10),
+        geometry.faces.push(
+            // "top" pentagon
+            new THREE.Face3(0, 1, 2),
+            new THREE.Face3(0, 2, 3),
+            new THREE.Face3(0, 3, 4),
+            new THREE.Face3(0, 4, 5),
+            new THREE.Face3(0, 5, 1),
+            // "sides"
+            new THREE.Face3(6, 2, 1),
+            new THREE.Face3(7, 3, 2),
+            new THREE.Face3(8, 4, 3),
+            new THREE.Face3(9, 5, 4),
+            new THREE.Face3(10, 1, 5),
+            // more "sides"
+            new THREE.Face3(6, 7, 2),
+            new THREE.Face3(7, 8, 3),
+            new THREE.Face3(8, 9, 4),
+            new THREE.Face3(9, 10, 5),
+            new THREE.Face3(10, 6, 1),
+            // "bottom" pentagon
+            new THREE.Face3(11, 10, 9),
+            new THREE.Face3(11, 9, 8),
+            new THREE.Face3(11, 8, 7),
+            new THREE.Face3(11, 7, 6),
+            new THREE.Face3(11, 6, 10),
 
-        // );
+        );
+        // load a texture
+        var loader = new THREE.TextureLoader();
+        
+        var material = new THREE.MeshPhongMaterial({
+            map: loader.load(
+                // resource URL
+                textureImage),
+            polygonOffset: true,
+            polygonOffsetFactor: 1, // positive value pushes polygon further away
+            polygonOffsetUnits: 1
+        });
+        var mesh = new THREE.Mesh(geometry, material);
+        // scene.add(mesh)
 
+        // wireframe
+        var geo = new THREE.EdgesGeometry(mesh.geometry); // or WireframeGeometry
+        var mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+        var wireframe = new THREE.LineSegments(geo, mat);
+        mesh.add(wireframe);        
+        // let's export this bad boy
+        return mesh;
+
+    },
+
+    icosahedron_builtin: function() {
         // also we can just do this the easy way
         var geometry = new THREE.IcosahedronGeometry(2, 1);
 
@@ -184,7 +254,7 @@ export default {
         }
         console.log(numHexes + " total hexes.");
 
-        // // load a texture
+        // load a texture
         var loader = new THREE.TextureLoader();
         // // some kind of material
         // var material = new THREE.MeshLambertMaterial({

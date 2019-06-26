@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+
+    <form id="loginCredentials" action="localhost:56533/api/user/login" method="post">
+        username: <input type="text" name="username"> <br>
+        password: <input type="password" name="password"> <br>
+        <input type="submit">
+    </form>
+
+</body>
+</html>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<script>
+    $("#loginCredentials").submit(() => {
+        var fd = new FormData();    
+        var username = $("input[name='username'").val();
+        var password = $("input[name='password'").val();
+        console.log("username:", username, "password:", password);
+        fd.append("username", username);
+        fd.append("password", password);
+
+        $.ajax({
+        url: 'https://gogobackend.azurewebsites.net/api/user/login',
+        data: fd,
+        processData: false,
+        contentType: false,
+        type: 'POST',
+        origin: 'www.go.com',
+        success: function(data){
+            alert(data);
+        }
+        });
+    })
+</script>

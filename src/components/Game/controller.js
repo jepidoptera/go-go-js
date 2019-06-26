@@ -16,15 +16,16 @@ export default (() => {
 
         // a scene to start with
         var scene = new THREE.Scene();
-
-        // testing...
         var icosa = new Object3D();
-        icosa.add(test.icosahedron());
+        let testObject = test.icosahedron();
+
+        console.log(testObject);
+        icosa.add(...testObject);
         scene.add(icosa);
 
         // set up camera
-        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = 5;
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        camera.position.z = 1000;
 
         // renderer
         var renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
