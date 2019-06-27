@@ -50,7 +50,7 @@ export default {
             
             // console.log(mesh);
             meshes[i] = new THREE.Object3D();
-            meshes[i].add (new THREE.Mesh(geometry));
+            meshes[i].add (new THREE.Mesh(geometry, material));
             // wireframe
             let geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
             let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });

@@ -1,0 +1,6 @@
+body {margin: 0; }
+canvas {
+    width: 100vmin; 
+    height: 100vmin;
+    border: 1px solid black;
+}

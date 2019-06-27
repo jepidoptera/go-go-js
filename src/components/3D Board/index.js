@@ -1,23 +1,24 @@
 import * as THREE from 'three';
-import test from "./test";
+import shapes from "./shapes";
 import { Object3D } from 'three';
 var $ = require("jquery");
 
-console.log(test);
-
-export default (() => {
+var HexaSphere = (() => {
     // $(Document).ready(function() {
     //     // is this thing on??
     //     console.log("script started.");
     //     return false;
     // });
+    var xAxis = new THREE.Vector3(1, 0, 0);
+    var yAxis = new THREE.Vector3(0, -1, 0);
+
     $(function () {
         console.log("script started.");
 
         // a scene to start with
         var scene = new THREE.Scene();
         var icosa = new Object3D();
-        let testObject = test.icosahedron();
+        let testObject = shapes.icosahedron();
 
         console.log(testObject);
         icosa.add(...testObject);
@@ -71,14 +72,14 @@ export default (() => {
                 deltaX = last_position.x - event.clientX;
                 deltaY = last_position.y - event.clientY;
             }
+            // save current position as last_position for next time
             last_position = {
                 x: event.clientX,
                 y: event.clientY
             };
-            let axis = new THREE.Vector3(Math.abs(deltaY), 0, 0).normalize();
-            icosa.rotateOnWorldAxis(axis, -deltaY / 100);
-            axis = new THREE.Vector3(0, -Math.abs(deltaX), 0).normalize();
-            icosa.rotateOnWorldAxis(axis, deltaX / 100);
+            // apply rotations on x and y axes
+            icosa.rotateOnWorldAxis(xAxis, -deltaY / 100);
+            icosa.rotateOnWorldAxis(yAxis, deltaX / 100);
             // console.log("rotated on:", axis);
             // console.log("position: ", icosa.position);
             // icosa.rotation.x += 0.01;
@@ -86,3 +87,5 @@ export default (() => {
         }
     });
 });
+
+export default HexaSphere;
