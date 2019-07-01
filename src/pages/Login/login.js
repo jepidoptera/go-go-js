@@ -12,13 +12,13 @@ $(document).ready(() => {
     $("#loginCredentials").submit(event => {
         event.preventDefault();
         let formData = new FormData(document.getElementById("loginCredentials"));
-        formData.keys().forEach(key => console.log(key) );
         $.ajax({
-            url: "https://crossorigin.me/https://gogobackend.azurewebsites.net/api/user/login", 
+            // https://gogobackend.azurewebsites.net
+            // localhost:56533
+            url: "https://gogobackend.azurewebsites.net/api/user/login", 
             method: "post",
             data: formData,
             processData: false,
-            contentType: false,
             crossDomain: true
         }).then(res => {
             console.log("got a login response")
