@@ -2,25 +2,24 @@ import * as THREE from 'three';
 import shapes from "./shapes";
 import { Object3D } from 'three';
 var $ = require("jquery");
+var scene;
 
-var HexaSphere = (() => {
+var HexaSphere = {
     // $(Document).ready(function() {
     //     // is this thing on??
     //     console.log("script started.");
     //     return false;
     // });
-    var xAxis = new THREE.Vector3(1, 0, 0);
-    var yAxis = new THREE.Vector3(0, -1, 0);
 
-    $(function () {
+    construct: function() {
         console.log("script started.");
 
         // a scene to start with
-        var scene = new THREE.Scene();
+        scene = new THREE.Scene();
         var icosa = new Object3D();
         let testObject = shapes.icosahedron();
 
-        console.log(testObject);
+        // console.log(testObject);
         icosa.add(...testObject);
         scene.add(icosa);
 
@@ -29,7 +28,7 @@ var HexaSphere = (() => {
         camera.position.z = 1000;
 
         // renderer
-        var renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+        var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setClearColor(0x000000, 0);
         document.body.appendChild(renderer.domElement);
@@ -62,7 +61,7 @@ var HexaSphere = (() => {
             };                    
             $body.on('mousemove', dragRotate);
         });
-        $body.on("mouseup", function (event) {
+        $body.on("mouseup", function () {
             $body.off('mousemove', dragRotate);
         })
         function dragRotate(event) {
@@ -78,6 +77,8 @@ var HexaSphere = (() => {
                 y: event.clientY
             };
             // apply rotations on x and y axes
+            let xAxis = new THREE.Vector3(1, 0, 0);
+            let yAxis = new THREE.Vector3(0, -1, 0);
             icosa.rotateOnWorldAxis(xAxis, -deltaY / 100);
             icosa.rotateOnWorldAxis(yAxis, deltaX / 100);
             // console.log("rotated on:", axis);
@@ -85,7 +86,12 @@ var HexaSphere = (() => {
             // icosa.rotation.x += 0.01;
             // icosa.rotation.y += 0.01;
         }
-    });
-});
+    },
+    deconstruct: function () {
+        for (var i = scene.children.length - 1; i >= 0; i--) { 
+            scene.remove(scene.children[i]);
+        }
+    }
+};
 
 export default HexaSphere;

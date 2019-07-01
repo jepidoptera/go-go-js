@@ -14,6 +14,7 @@ export default function (props) {
                 <input type="submit"></input>
             </form>
             <p>Don't have an account?  Click <a href="/register">here</a> to create one.</p>
+            <p>Or <a href="/game/options">play offline</a>.</p>
         </div>
     )
 }

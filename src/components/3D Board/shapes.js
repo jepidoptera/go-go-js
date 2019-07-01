@@ -1,7 +1,9 @@
 // jshint multistr: true
 import * as THREE from 'three';
-import textureImage from "../../images/sideline.png";
+import textureImage from "../../images/texture2.png";
 import hexaSphere from "../../models/hexasphere2.json"
+import * as MESHLINE from 'three.meshline';
+
 var $ = require("jquery");
 
 // let's try some tests
@@ -33,8 +35,9 @@ export default {
         });
 
         // load all meshes from file
-        hexaSphere.meshes.forEach((mesh, i) => {
-            var geometry = new THREE.Geometry();
+        return hexaSphere.meshes.map((mesh) => {
+            let object3d = new THREE.Object3D();
+            let geometry = new THREE.Geometry();
             // load vertices
             mesh.vertices.forEach(vertex => {
                 geometry.vertices.push(new THREE.Vector3(vertex.x, vertex.y, vertex.z));
@@ -42,23 +45,106 @@ export default {
             // faces
             for (let i = 0; i < mesh.faces.length; i += 3) {
                 geometry.faces.push(new THREE.Face3(mesh.faces[i], mesh.faces[i+1], mesh.faces[i+2]));
+            };
+
+            // uvs
+            console.log("starting uvs for: ", geometry);
+
+            // now divide the mesh into hexes!
+            geometry.vertices[0].isHex = true;
+            // somehow
+            for (let i = 0; i < geometry.vertices.length; i++) {
+                geometry.vertices[i].neighbors = [];
             }
+            // find the neighbors of each vertex
+            for (let i = 0; i < geometry.faces.length; i++) {
+                // console.log(geometry.faces[i]);
+                if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].b)) {
+                    geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].b)
+                }
+                if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].c)) {
+                    geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].c)
+                }
+                if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].a)) {
+                    geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].a)
+                }
+                if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].b)) {
+                    geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].b)
+                }
+                if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].c)) {
+                    geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].c)
+                }
+                if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].a)) {
+                    geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].a)
+                }
+            }
+
+            // let's find the pentagons
+            let pentagons = []
+            for (let i = 0; i < geometry.vertices.length; i++) {
+                // keep track of an index for each one... might be useful later
+                geometry.vertices[i].index = i;
+                if (geometry.vertices[i].neighbors.length === 2) {
+                    geometry.vertices[i].isHex = true;
+                    pentagons.push(geometry.vertices[i]);
+                }
+            }
+            console.log("pentagons: ", pentagons);
+
+            // now for each neighbor of each pentagon...
+            for (let i = 0; i < pentagons.length; i++) {
+                // or rather, for each adjacent pair of neighbors...
+                let n1 = geometry.vertices[pentagons[i].neighbors[0]];
+                let n2 = geometry.vertices[pentagons[i].neighbors[1]];
+
+                var common = $.grep(n1.neighbors, function (element) {
+                    return $.inArray(element, n2.neighbors) !== -1;
+                });
+                // there should be two - get the one which is != pentagons[i]
+                common = common[1] === pentagons[i].index ? common[0] : common[1];
+                geometry.vertices[common].isHex = true;
+                // n1.isHex = false;
+            }
+
+            // for a level-2 spheroid, that should be all we have to do
+            // so now we set the uvs
+            for (let i = 0; i < geometry.faces.length; i++) {
+                geometry.faceVertexUvs[0][i] = [];
+                for (let j = 0; j < 3; j++) {
+                    geometry.faceVertexUvs[0][i][j] = new THREE.Vector2(0, 0);
+                    let v = geometry.faces[i][['a', 'b', 'c'][j]];
+                    if (geometry.vertices[v].isHex) {
+                        geometry.faceVertexUvs[0][i][j].set(1, 0);
+                    }
+                    else {
+                        geometry.faceVertexUvs[0][i][j].set(0, 0);
+                    }
+                }
+            }
+
             // calculate the normals automatically
             geometry.computeFaceNormals();
             geometry.computeVertexNormals();
             geometry.verticesNeedUpdate = true;
-            
+            geometry.uvsNeedUpdate = true;
+
             // console.log(mesh);
-            meshes[i] = new THREE.Object3D();
-            meshes[i].add (new THREE.Mesh(geometry, material));
+            mesh = new THREE.Mesh(geometry, material);
+            object3d.add(mesh);
             // wireframe
             let geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
-            let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+            let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 6 });
             let wireframe = new THREE.LineSegments(geo, mat);
-            meshes[i].add(wireframe);        
+            // let line = new MESHLINE.MeshLine();
+            // line.setGeometry(geometry, p => 3);
+            // let meshMaterial = new MESHLINE.MeshLineMaterial(
+            //     { resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)});
+            // let wireframe = new THREE.Mesh(line.geometry, meshMaterial); // this syntax could definitely be improved!
+            object3d.add(wireframe);   
+            return object3d;
         })
-        console.log(meshes);
-        return meshes;
+        // console.log(meshes);
+        // return meshes;
     },
     
     icosahedron_scratch: function () {
@@ -129,6 +215,7 @@ export default {
         });
         var mesh = new THREE.Mesh(geometry, material);
         // scene.add(mesh)
+        console.log(mesh)
 
         // wireframe
         var geo = new THREE.EdgesGeometry(mesh.geometry); // or WireframeGeometry
@@ -142,7 +229,7 @@ export default {
 
     icosahedron_builtin: function() {
         // also we can just do this the easy way
-        var geometry = new THREE.IcosahedronGeometry(2, 1);
+        let geometry = new THREE.IcosahedronGeometry(2, 1);
 
         // let's see what's inside
         console.log("vertices:", geometry.vertices);
@@ -255,7 +342,7 @@ export default {
         console.log(numHexes + " total hexes.");
 
         // load a texture
-        var loader = new THREE.TextureLoader();
+        let loader = new THREE.TextureLoader();
         // // some kind of material
         // var material = new THREE.MeshLambertMaterial({
         //     map: loader.load(
@@ -264,7 +351,7 @@ export default {
         //     wireframe: true
         // });
         
-        var material = new THREE.MeshPhongMaterial({
+        let material = new THREE.MeshPhongMaterial({
             map: loader.load(
                 // resource URL
                 textureImage),
@@ -272,13 +359,13 @@ export default {
             polygonOffsetFactor: 1, // positive value pushes polygon further away
             polygonOffsetUnits: 1
         });
-        var mesh = new THREE.Mesh(geometry, material);
+        let mesh = new THREE.Mesh(geometry, material);
         // scene.add(mesh)
 
         // wireframe
-        var geo = new THREE.EdgesGeometry(mesh.geometry); // or WireframeGeometry
-        var mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
-        var wireframe = new THREE.LineSegments(geo, mat);
+        let geo = new THREE.EdgesGeometry(mesh.geometry); // or WireframeGeometry
+        let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
+        let wireframe = new THREE.LineSegments(geo, mat);
         mesh.add(wireframe);        
         // let's export this bad boy
         return mesh;

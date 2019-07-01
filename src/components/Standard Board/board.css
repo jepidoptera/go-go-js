@@ -5,4 +5,13 @@
     left: 50%;
     transform: translate(-50%, -50%);
     height: 100vmin;
+    width: 100vmin;
+    overflow: hidden;
+}
+
+#boardImg {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }

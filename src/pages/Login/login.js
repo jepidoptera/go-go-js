@@ -1,5 +1,4 @@
 import "jquery-form";
-import axios from "axios";
 var $ = require("jquery");
 
 $(document).ready(() => {
@@ -22,7 +21,7 @@ $(document).ready(() => {
             crossDomain: true
         }).then(res => {
             console.log("got a login response")
-            console.log("HEres the Response Body: ", res.body);
+            console.log("Heres the Response Body: ", res.body);
         })
     })
     //     // go to game window
