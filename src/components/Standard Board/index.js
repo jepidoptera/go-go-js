@@ -57,7 +57,7 @@ class Board extends Component {
     }
 };
 
-function goStone(stone, vanish) {
+function goStone(stone, captured) {
     // only draw stones which have a color
     if ([go.stone.black, go.stone.white].includes(stone.color)) {
         // get x/y coordinates
@@ -75,15 +75,8 @@ function goStone(stone, vanish) {
             key: stone.location,
             color: ["black", "white"][stone.color]
         }
-        // create either a stone or a capturedStone, depending
-        // the only difference being the the captured stone will immediately shrink and disappear
-        // the same properties are applied either way
-        if (!vanish)
-            return (<Stone {...props} />)
-        else {
-            console.log("captured stone!");
-            return (<Stone {...props} captured={true} />)
-        }
+        // if captured is set to true, the stone will immediately shrink and disappear
+        return (<Stone {...props} captured={captured}/>)
     }
     // if color == -1, render nothing
     else return null;

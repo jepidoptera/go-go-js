@@ -14,7 +14,7 @@
 
 /* apply when stone is captured */
 .vanish {
-    animation: vanish 1s normal forwards;
+    animation: vanish 500ms normal forwards;
 }
     /* animate! */
 

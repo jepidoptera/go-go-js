@@ -23,7 +23,7 @@ var go = {
         }
     },
 
-    setupBoard: function (boardType, boardSize) {
+    initialize: function (boardType, boardSize) {
 
         this.board.size = boardSize;
         this.nullStone = new this.Stone(-1);
@@ -42,14 +42,21 @@ var go = {
         this.player[this.stone.white].opponent = this.player[this.stone.black];
         this.player[this.stone.black].opponent = this.player[this.stone.white];
 
-        // set up board nodes
+        // set nullstone in each node
+        // it's just easier this way - really
+        // square board doesn't come with a json file
         if (boardType === "square") {
-            // make an array filled with empty stones
+        // so we set up node neighbors programatically
             for (let i = 0; i < boardSize * boardSize; i++) {
                 this.board.nodes[i] = { stone: this.nullStone };
                 this.board.nodes[i].neighbors = this.SquareNeighbors(i);
             }
         }
+        // else {
+        //     for (let i = 0; i < this.board.nodes.length; i++) {
+        //         this.board.nodes[i].stone = this.nullStone;
+        //     }
+        // }
     },
 
     indexFromCoors: function (x, y) {
