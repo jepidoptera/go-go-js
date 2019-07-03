@@ -239,9 +239,9 @@ export default {
 
     },
 
-    goStone: function(color) {
+    goStone: function(color, temp) {
         // using a simple built-in shape which has no problem accepting a texture or color
-        let geometry = new THREE.IcosahedronGeometry(2, 2);
+        let geometry = new THREE.IcosahedronGeometry(2, 3);
 
         // calculate the normals automatically
         geometry.computeFaceNormals();
@@ -249,7 +249,9 @@ export default {
 
 
         let material = new THREE.MeshPhongMaterial({
-            color: (color==="black" ? 0x000000 : 0xffffff),
+            color: (color === "black" ? 0x000000 : 0xffffff),
+            // if temp stone, make it transparent
+            ...(temp ? { transparent: true, opacity: 0.5 } : {}),
             polygonOffset: true,
             polygonOffsetFactor: 1, // positive value pushes polygon further away
             polygonOffsetUnits: 1

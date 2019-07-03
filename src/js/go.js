@@ -88,42 +88,51 @@ var go = {
     TryPlayStone: function (location, color) {
         // gotta play in this.turn
         if (color !== this.turn) return false;
-
+        
         // only play on a square that isn't occupied
         if ([this.stone.white, this.stone.black]
             .includes(this.board.nodes[location].stone.color)) return false;
 
-        // fill that grid point with a placeholder stone
+        // with those basic checks out of the way, let's see if this move is allowable
+        let allowMove = true;
+        
+        // we'll reset turn after this is done
+        let originalTurn = this.turn;
+
+        // fill the grid point with a placeholder stone
         this.board.nodes[location].stone = new this.Stone(this.turn, location);
 
-        // check for captured stones
+        // check for captures
         let captures = this.Captures(location);
 
         // applying ko rule here...
         if (captures.length === 1 && captures[0] === this.koStone) {
             // take it back
             console.log("no go (ko)");
-            this.board.nodes[location].stone = this.nullStone;
-            return false;
+            allowMove = false;
         }
 
         else if (captures.length > 0) {
             // legal move. capturing is only even illegal in a ko situation
-            this.board.nodes[location].stone = this.nullStone;
-            return true;
         }
 
-        // if the stone that was just played would be captured, it isn't a legal move
-        else if (captures.length === 0 && this.NextTurn() &&
+        // check for self-captures.  In other words,
+        // if the stone that was just played would be captured where it stands,
+        // it isn't a legal move
+        else {
             // we do this "capture" without adding any additional stones,
             // so it returns a value only if the stone is already surrounded
-            this.Captures(this.board.nodes[location].neighbors[0]).length > 0) {
+            if (this.NextTurn() &&
+                this.Captures(this.board.nodes[location].neighbors[0]).length > 0) {
 
-            // take it back
-            this.board.nodes[location].stone = this.nullStone;
-            this.NextTurn();
-            return false;
+                allowMove = false;
+            }
         }
+        // undo all changes
+        this.board.nodes[location].stone = this.nullStone;
+        this.turn = originalTurn;
+        // return result
+        return allowMove;
     },
 
     PlayStone(location, color) {
@@ -159,6 +168,9 @@ var go = {
         // played successfully
         console.log("played at: ", location);
         if (captures.length > 0) console.log("stones captured: ", this.capturedStones);
+        // next turn
+        this.NextTurn();
+        
         return true;
     },
 

@@ -26,6 +26,7 @@ var HexaSphere = {
 
         // make a temp stone that appears when you initially click a spot
         // but doesn't become permanent until you click again
+        var tempStone = {location: -1};
 
         // set up nodes
         go.board.nodes = nodes.map((node, i) => {
@@ -156,26 +157,26 @@ var HexaSphere = {
                 }
                 // put the stone right on the node
                 clickedAt = nearestNode.position;
-
-                if (go.TryPlayStone(nearestNode.index, go.turn)) {
-                    // create a stone
-                    tempStone = shapes.goStone(["black", "white"][go.turn]);
-
-                    // enlarge and flatten it
-                    tempStone.scale.set(20, 20, 10);
-
-                    // set it in place
-                    tempStone.position.set(clickedAt.x, clickedAt.y, clickedAt.z);
-
+                if (nearestNode.index === tempStone.location) {
+                    // add a permanent version of the temp stone
+                    var permStone = shapes.goStone(["black", "white"][go.turn]);
+                    // set it up just like the temp stone was
+                    permStone.scale.set(20, 20, 10);
+                    permStone.position.set(clickedAt.x, clickedAt.y, clickedAt.z);
                     // align it with the board
-                    tempStone.lookAt(new THREE.Vector3(0, 0, 0));
-
-                    // attach it
-                    icosa.add(tempStone);
-
+                    permStone.lookAt(new THREE.Vector3(0, 0, 0));
+                    // add to the scene
+                    icosa.add(permStone);
+                    // remove the temp
+                    icosa.remove(tempStone);
+                    // off the board, or the next player could place a stone here too
+                    tempStone.location = -1;
+                    // add it to the virtual board
+                    go.PlayStone(nearestNode.index, go.turn);
                     // save a reference in the board
-                    go.board.nodes[nearestNode.index].stone.object = tempStone;
+                    go.board.nodes[nearestNode.index].stone.object = permStone;
 
+                    // were any stones captured?
                     if (go.capturedStones.length > 0) {
                         // some stones were captured, we need to make them disappear
                         go.capturedStones.forEach(stone => {
@@ -193,6 +194,32 @@ var HexaSphere = {
                         });
                         go.capturedStones = [];
                     }
+                }
+
+                // if the click was anywhere except an already-placed temp stone
+                // then just add a temp; click it again to make it a real move.
+                else if (go.TryPlayStone(nearestNode.index, go.turn)) {
+                    // remove temp stone from where it was if it exists
+                    icosa.remove(tempStone);
+
+                    // create a new temp stone
+                    tempStone = shapes.goStone(["black", "white"][go.turn], "temp");
+
+                    // enlarge and flatten it
+                    tempStone.scale.set(20, 20, 10);
+
+                    // set it in place
+                    tempStone.position.set(clickedAt.x, clickedAt.y, clickedAt.z);
+
+                    // position on board index
+                    tempStone.location = nearestNode.index;
+
+                    // align it with the board
+                    tempStone.lookAt(new THREE.Vector3(0, 0, 0));
+
+                    // attach it
+                    icosa.add(tempStone);
+
                 }
                 else {
                     // no go
