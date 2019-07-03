@@ -1,7 +1,7 @@
 import "./canvas.css";
 import React, { Component } from 'react';
 // import THREE from "../../js/three.js";
-import GameCanvas from "./controller.js";
+import GameCanvas from "./controller.js.js";
 
 
 class Game extends Component {

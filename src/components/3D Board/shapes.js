@@ -4,8 +4,6 @@ import textureImage from "./sideline.png";
 import hexaSphere from "../../models/hexasphere2.json"
 // import * as MESHLINE from 'three.meshline';
 
-var $ = require("jquery");
-
 // let's try some tests
 export default {
 
@@ -35,7 +33,7 @@ export default {
         });
 
         // load all meshes from file and build a single object from them
-        var meshes = hexaSphere.meshes.map((mesh) => {
+        meshes = hexaSphere.meshes.map((mesh) => {
             let geometry = new THREE.Geometry();
             // load vertices
             mesh.vertices.forEach(vertex => {

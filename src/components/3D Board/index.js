@@ -76,7 +76,6 @@ var HexaSphere = {
         // click + drag to rotate board,
         // click to place stone
         var last_position;
-        var start_position;
         var deltaX, deltaY;
         var culumlativeMotion = 0;
         $(canvas).on('mousedown', function (event) {
