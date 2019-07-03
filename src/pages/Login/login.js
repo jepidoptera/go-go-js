@@ -11,6 +11,7 @@ $(document).ready(() => {
     // $("#loginCredentials").submit(event => {
     //     event.preventDefault();
     //     let formData = new FormData(document.getElementById("loginCredentials"));
+    //     console.log(...formData.entries())
     //     $.ajax({
     //         // https://gogobackend.azurewebsites.net
     //         // localhost:56533

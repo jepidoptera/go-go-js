@@ -4,7 +4,8 @@ var go = {
     turn: 0,
     stone: { empty: -1, black: 0, white: 1 },
     playOffline: false,
-    captures: [],
+    capturedStones: [],
+    koStone: null,
     
     Player: class {
         constructor(color, name) {
@@ -23,7 +24,7 @@ var go = {
         }
     },
 
-    setupBoard: function (boardType, boardSize) {
+    initialize: function (boardType, boardSize) {
 
         this.board.size = boardSize;
         this.nullStone = new this.Stone(-1);
@@ -42,14 +43,21 @@ var go = {
         this.player[this.stone.white].opponent = this.player[this.stone.black];
         this.player[this.stone.black].opponent = this.player[this.stone.white];
 
-        // set up board nodes
+        // set nullstone in each node
+        // it's just easier this way - really
+        // square board doesn't come with a json file
         if (boardType === "square") {
-            // make an array filled with empty stones
+        // so we set up node neighbors programatically
             for (let i = 0; i < boardSize * boardSize; i++) {
                 this.board.nodes[i] = { stone: this.nullStone };
                 this.board.nodes[i].neighbors = this.SquareNeighbors(i);
             }
         }
+        // else {
+        //     for (let i = 0; i < this.board.nodes.length; i++) {
+        //         this.board.nodes[i].stone = this.nullStone;
+        //     }
+        // }
     },
 
     indexFromCoors: function (x, y) {
@@ -88,6 +96,16 @@ var go = {
 
         // check for captured stones
         let captures = this.Captures(location);
+
+        // applying ko rule here...
+        if (captures.length === 1 && captures[0] === this.koStone) {
+            // take it back
+            console.log("no go (ko)");
+            this.board.nodes[location].stone = this.nullStone;
+            return false;
+        }
+
+        // legal move, go ahead and capture them
         if (captures.length > 0) {
             this.CaptureStones(captures);
         }
@@ -95,29 +113,43 @@ var go = {
         // next this.turn...
         this.NextTurn();
 
-        // if the stone that was just played would be captured, 
-        // (by neighbor[0], for instance) it isn't a legal move
+        // if the stone that was just played would be captured, it isn't a legal move
         // this works because a stone is captured by all neighbors at once
-        if (this.Captures(this.board.nodes[location].neighbors[0]).length > 0) {
+        if (captures === [] &&
+            this.Captures(this.board.nodes[location].neighbors[0]).length > 0) {
+            
             // take it back
             this.board.nodes[location].stone = this.nullStone;
             this.NextTurn();
             return false;
         }
 
-        // todo: research and implement ko rule
+        // ko rule
+        if (captures.length === 1) {
+            console.log("captures: ", captures, " ko stone: ", [this.koStone]);
+            console.log("ko stone at: ", location);
+            this.koStone = location;
+        }
 
         // clear captures if there were none this turn
-        if (captures.length === 0) this.captures = [];
+        if (captures.length === 0) {
+            this.capturedStones = [];
+        }
+        // ko only applies when a single stone is captured
+        if (captures.length !== 1) {
+            this.koStone = null;
+        }
 
         // played successfully
+        console.log("played at: ", location);
+        if (captures.length > 0) console.log("stones captured: ", this.capturedStones);
         return true;
     },
 
     CaptureStones: function (stones) {
-        console.log("stones captured: ", stones)
+        // console.log("stones captured: ", stones)
         // export the captures array
-        this.captures = stones.map(i => this.board.nodes[i].stone);
+        this.capturedStones = stones.map(i => this.board.nodes[i].stone);
         // clear the stones
         for (let i = 0; i < stones.length; i++) {
             // clear these stones.  other player gains captives.

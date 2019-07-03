@@ -1,6 +1,6 @@
 // jshint multistr: true
 import * as THREE from 'three';
-import textureImage from "../../images/texture2.png";
+import textureImage from "./sideline.png";
 import hexaSphere from "../../models/hexasphere2.json"
 // import * as MESHLINE from 'three.meshline';
 
@@ -18,14 +18,14 @@ export default {
         return cube;
     },
 
-    icosahedron: function() {
+    icosahedron: function(nodes) {
         // we will return an array of meshes
         var meshes = [];
 
         // load a texture to use for all meshes
         var loader = new THREE.TextureLoader();
         
-        var material = new THREE.MeshPhongMaterial({
+        var material = new THREE.MeshLambertMaterial({
             map: loader.load(
                 // resource URL
                 textureImage),
@@ -34,9 +34,8 @@ export default {
             polygonOffsetUnits: 1
         });
 
-        // load all meshes from file
-        return hexaSphere.meshes.map((mesh) => {
-            let object3d = new THREE.Object3D();
+        // load all meshes from file and build a single object from them
+        var meshes = hexaSphere.meshes.map((mesh) => {
             let geometry = new THREE.Geometry();
             // load vertices
             mesh.vertices.forEach(vertex => {
@@ -47,64 +46,77 @@ export default {
                 geometry.faces.push(new THREE.Face3(mesh.faces[i], mesh.faces[i+1], mesh.faces[i+2]));
             };
 
-            // uvs
-            console.log("starting uvs for: ", geometry);
-
             // now divide the mesh into hexes!
-            geometry.vertices[0].isHex = true;
+            // geometry.vertices[0].isHex = true;
             // somehow
-            for (let i = 0; i < geometry.vertices.length; i++) {
-                geometry.vertices[i].neighbors = [];
-            }
-            // find the neighbors of each vertex
-            for (let i = 0; i < geometry.faces.length; i++) {
-                // console.log(geometry.faces[i]);
-                if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].b)) {
-                    geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].b)
-                }
-                if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].c)) {
-                    geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].c)
-                }
-                if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].a)) {
-                    geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].a)
-                }
-                if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].b)) {
-                    geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].b)
-                }
-                if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].c)) {
-                    geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].c)
-                }
-                if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].a)) {
-                    geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].a)
-                }
-            }
+            // for (let i = 0; i < geometry.vertices.length; i++) {
+            //     geometry.vertices[i].neighbors = [];
+            // }
+            // // find the neighbors of each vertex
+            // for (let i = 0; i < geometry.faces.length; i++) {
+            //     // console.log(geometry.faces[i]);
+            //     if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].b)) {
+            //         geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].b)
+            //     }
+            //     if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].c)) {
+            //         geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].c)
+            //     }
+            //     if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].a)) {
+            //         geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].a)
+            //     }
+            //     if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].c)) {
+            //         geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].c)
+            //     }
+            //     if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].a)) {
+            //         geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].a)
+            //     }
+            //     if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].b)) {
+            //         geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].b)
+            //     }
+            // }
 
-            // let's find the pentagons
-            let pentagons = []
+            // let's find the nodes, where lines intersect and you can place a stone
+            // while we're at it let's clock just how much time we're wasting with the inefficient algorithm
+            let start = Date.now();
+            let nodelocations = hexaSphere.nodes.map(node => node.position);
+            let hexes = 0;
             for (let i = 0; i < geometry.vertices.length; i++) {
                 // keep track of an index for each one... might be useful later
-                geometry.vertices[i].index = i;
-                if (geometry.vertices[i].neighbors.length === 2) {
-                    geometry.vertices[i].isHex = true;
-                    pentagons.push(geometry.vertices[i]);
+                // geometry.vertices[i].index = i;
+                // if (geometry.vertices[i].neighbors.length === 2) {
+                //     geometry.vertices[i].isHex = true;
+                //     pentagons.push(geometry.vertices[i]);
+                // }
+                // an ineficient way to find which verticies are also nodes...
+                // the correct thing to do would be to include a flag on the vertex in the json file
+                // todo: flag node vertices in the json file
+                for (let n = 0; n < nodelocations.length; n++) {
+                    if (nodelocations[n].x === geometry.vertices[i].x &&
+                        nodelocations[n].y === geometry.vertices[i].y &&
+                        nodelocations[n].z === geometry.vertices[i].z) {
+                            // we've got a match :)
+                            geometry.vertices[i].isHex = true;
+                            hexes++;
+                    }
                 }
             }
-            console.log("pentagons: ", pentagons);
+            console.log("hexes: ", hexes);
+            console.log("Time to calculate: ", (Date.now() - start), "ms.")
 
-            // now for each neighbor of each pentagon...
-            for (let i = 0; i < pentagons.length; i++) {
-                // or rather, for each adjacent pair of neighbors...
-                let n1 = geometry.vertices[pentagons[i].neighbors[0]];
-                let n2 = geometry.vertices[pentagons[i].neighbors[1]];
+            // // now for each neighbor of each pentagon...
+            // for (let i = 0; i < pentagons.length; i++) {
+            //     // or rather, for each adjacent pair of neighbors...
+            //     let n1 = geometry.vertices[pentagons[i].neighbors[0]];
+            //     let n2 = geometry.vertices[pentagons[i].neighbors[1]];
 
-                var common = $.grep(n1.neighbors, function (element) {
-                    return $.inArray(element, n2.neighbors) !== -1;
-                });
-                // there should be two - get the one which is != pentagons[i]
-                common = common[1] === pentagons[i].index ? common[0] : common[1];
-                geometry.vertices[common].isHex = true;
-                // n1.isHex = false;
-            }
+            //     var common = $.grep(n1.neighbors, function (element) {
+            //         return $.inArray(element, n2.neighbors) !== -1;
+            //     });
+            //     // there should be two - get the one which is != pentagons[i]
+            //     common = common[1] === pentagons[i].index ? common[0] : common[1];
+            //     geometry.vertices[common].isHex = true;
+            //     // n1.isHex = false;
+            // }
 
             // for a level-2 spheroid, that should be all we have to do
             // so now we set the uvs
@@ -114,10 +126,10 @@ export default {
                     geometry.faceVertexUvs[0][i][j] = new THREE.Vector2(0, 0);
                     let v = geometry.faces[i][['a', 'b', 'c'][j]];
                     if (geometry.vertices[v].isHex) {
-                        geometry.faceVertexUvs[0][i][j].set(1, 0);
+                        geometry.faceVertexUvs[0][i][j].set(0, 0);
                     }
                     else {
-                        geometry.faceVertexUvs[0][i][j].set(0, 0);
+                        geometry.faceVertexUvs[0][i][j].set(1, 0);
                     }
                 }
             }
@@ -130,21 +142,23 @@ export default {
 
             // console.log(mesh);
             mesh = new THREE.Mesh(geometry, material);
-            object3d.add(mesh);
+            // object3d.add(mesh);
             // wireframe
-            let geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
-            let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 6 });
-            let wireframe = new THREE.LineSegments(geo, mat);
+            // let geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
+            // let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 6 });
+            // let wireframe = new THREE.LineSegments(geo, mat);
             // let line = new MESHLINE.MeshLine();
             // line.setGeometry(geometry, p => 3);
             // let meshMaterial = new MESHLINE.MeshLineMaterial(
             //     { resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)});
             // let wireframe = new THREE.Mesh(line.geometry, meshMaterial); // this syntax could definitely be improved!
-            object3d.add(wireframe);   
-            return object3d;
+            // mesh.add(wireframe);
+            return mesh;
         })
-        // console.log(meshes);
-        // return meshes;
+        let object3d = new THREE.Object3D();
+        object3d.add(...meshes);
+        console.log("final object: ", object3d);
+        return { object: object3d, nodes: hexaSphere.nodes };
     },
     
     icosahedron_scratch: function () {
@@ -227,146 +241,23 @@ export default {
 
     },
 
-    icosahedron_builtin: function() {
-        // also we can just do this the easy way
-        let geometry = new THREE.IcosahedronGeometry(2, 1);
+    goStone: function(color) {
+        // using a simple built-in shape which has no problem accepting a texture or color
+        let geometry = new THREE.IcosahedronGeometry(2, 2);
 
-        // let's see what's inside
-        console.log("vertices:", geometry.vertices);
-        console.log("faces:", geometry.faces);
-        
         // calculate the normals automatically
         geometry.computeFaceNormals();
         geometry.computeVertexNormals();
 
-        // now divide the mesh into hexes!
-        geometry.vertices[0].isHex = true;
-        // somehow
-        for (let i = 0; i < geometry.vertices.length; i++) {
-            geometry.vertices[i].neighbors = [];
-        }
-        // find the neighbors of each vertex
-        for (let i = 0; i < geometry.faces.length; i++) {
-            // console.log(geometry.faces[i]);
-            if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].b)) {
-                geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].b)
-            }
-            if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].c)) {
-                geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].c)
-            }
-            if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].a)) {
-                geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].a)
-            }
-            if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].b)) {
-                geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].b)
-            }
-            if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].c)) {
-                geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].c)
-            }
-            if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].a)) {
-                geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].a)
-            }
-        }
-        // did this work?
-        // for (let i = 0; i < geometry.vertices.length; i++) {
-        //     console.log(geometry.vertices[i].neighbors);
-        // }
-        // yeah looks good
 
-        // let's find the pentagons
-        let pentagons = []
-        for (let i = 0; i < geometry.vertices.length; i++) {
-            // keep track of an index for each one... might be useful later
-            geometry.vertices[i].index = i;
-            if (geometry.vertices[i].neighbors.length === 5) {
-                geometry.vertices[i].isHex = true;
-                pentagons.push(geometry.vertices[i]);
-            }
-        }
-
-        // now for each neighbor of each pentagon...
-        for (let i = 0; i < pentagons.length; i++) {
-            for (let j = 0; j < 5; j++) {
-                // or rather, for each adjacent pair of neighbors...
-                let n1 = geometry.vertices[pentagons[i].neighbors[j]];
-                let n2 = geometry.vertices[pentagons[i].neighbors[(j + 1) % 5]];
-                // find the one neighbor these two have in common
-                // that vertex will also be a hex center
-                // console.log("two adjacent verticies,", n1.index, "and", n2.index);
-                // if (!$.inArray(geometry.vertices[i].neighbors[j], n2)) {
-                //     console.log("n1 is not in n2!");
-                // }
-                var common = $.grep(n1.neighbors, function (element) {
-                    return $.inArray(element, n2.neighbors) !== -1;
-                });
-                // there should be two - get the one which is != pentagons[i]
-                common = common[1] === pentagons[i].index ? common[0] : common[1];
-                // geometry.vertices[common].isHex = true;
-                // n1.isHex = false;
-            }
-        }
-
-        for (let i = 0; i < geometry.vertices.length; i++) {
-            console.log(geometry.vertices[i]);
-        }
-
-        // for a level-2 spheroid, that should be all we have to do
-        // so now we set the uvs
-        for (let i = 0; i < geometry.faces.length; i++) {
-            for (let j = 0; j < 3; j++) {
-                let v = geometry.faces[i][['a', 'b', 'c'][j]];
-                if (geometry.vertices[v].isHex) {
-                    geometry.faceVertexUvs[0][i][j].set(1, 0);
-                }
-                else {
-                    geometry.faceVertexUvs[0][i][j].set(0, 0);
-                }
-            }
-        }
-
-        // debugging here...
-        // how many total hexes do we have? do any of them have other hexes as neighbors??
-        let numHexes = 0;
-        for (let i = 0; i < geometry.vertices.length; i++) { 
-            if (geometry.vertices[i].isHex) {
-                numHexes += 1;
-                geometry.vertices[i].neighbors.forEach(n => {
-                    if (geometry.vertices[n].isHex) {
-                        console.log(`Problem: hex borders hex! ${i}
-                         with ${geometry.vertices[i].neighbors.length} sides, ${n}
-                         with ${geometry.vertices[n].neighbors.length} sides`);
-                    }
-                })
-            }
-        }
-        console.log(numHexes + " total hexes.");
-
-        // load a texture
-        let loader = new THREE.TextureLoader();
-        // // some kind of material
-        // var material = new THREE.MeshLambertMaterial({
-        //     map: loader.load(
-        //         // resource URL
-        //         textureImage),
-        //     wireframe: true
-        // });
-        
         let material = new THREE.MeshPhongMaterial({
-            map: loader.load(
-                // resource URL
-                textureImage),
+            color: (color==="black" ? 0x000000 : 0xffffff),
             polygonOffset: true,
             polygonOffsetFactor: 1, // positive value pushes polygon further away
             polygonOffsetUnits: 1
         });
         let mesh = new THREE.Mesh(geometry, material);
-        // scene.add(mesh)
 
-        // wireframe
-        let geo = new THREE.EdgesGeometry(mesh.geometry); // or WireframeGeometry
-        let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 });
-        let wireframe = new THREE.LineSegments(geo, mat);
-        mesh.add(wireframe);        
         // let's export this bad boy
         return mesh;
     },
