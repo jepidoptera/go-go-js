@@ -5,8 +5,11 @@ $(document).ready(() => {
     // $("#loginCredentials").submit(function (event) {
     // });  
     $("#loginCredentials").ajaxForm(function(res) {
-        console.log("got a login response")
-        console.log("HEres the Response: ", res);
+        console.log("got a login response: ", res.authToken);
+        // save username and authtoken to session storage
+        sessionStorage.setItem("authToken", res.authToken);
+        sessionStorage.setItem("username", $(`input[name='${username}']`))
+        window.location.href = "/gameLobby";
     })
     // $("#loginCredentials").submit(event => {
     //     event.preventDefault();
