@@ -25,7 +25,7 @@ export default {
         // load a texture to use for all meshes
         var loader = new THREE.TextureLoader();
         
-        var material = new THREE.MeshPhongMaterial({
+        var material = new THREE.MeshLambertMaterial({
             map: loader.load(
                 // resource URL
                 textureImage),

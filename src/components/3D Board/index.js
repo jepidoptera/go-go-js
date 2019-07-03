@@ -36,12 +36,6 @@ var HexaSphere = {
         // play the game on this node set
         console.log("game nodes are:", go.board.nodes);
 
-        // make another one
-        // var icosa2 = new Object3D();
-        // icosa2.add(shapes.icosahedron_builtin());
-        // icosa2.scale.set(10, 10, 10);
-        // icosa.add(icosa2);
-
         // set up camera
         var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
         camera.position.z = 1000;
@@ -53,14 +47,77 @@ var HexaSphere = {
         document.body.appendChild(renderer.domElement);
 
         // mouse click raycaster
-        let canvas = renderer.domElement;
+        var canvas = renderer.domElement;
+        canvas.setAttribute("id", "3dcanvas");
         let canvasPosition = $(canvas).position();
         let rayCaster = new THREE.Raycaster();
         let mousePosition = new THREE.Vector2();
         let nearestNode = go.board.nodes[0];
 
-        $(canvas).click((event) => {
+        // create a point light
+        var pointLight = new THREE.PointLight(0xFFFFFF);
 
+        // set its position
+        pointLight.position.x = 10;
+        pointLight.position.y = 50;
+        pointLight.position.z = 1300;
+
+        // add to the scene
+        scene.add(pointLight);
+        // animate
+        function animate() {
+            // test.rotate(icosa);
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // mouse events
+        // click + drag to rotate board,
+        // click to place stone
+        var last_position;
+        var start_position;
+        var deltaX, deltaY;
+        var culumlativeMotion = 0;
+        $(canvas).on('mousedown', function (event) {
+            last_position = {
+                x: event.clientX,
+                y: event.clientY
+            };                    
+            culumlativeMotion = 0;
+            $(canvas).on('mousemove', dragRotate);
+        });
+        $("body").on("mouseup", function (event) {
+            // let off the mouse drag
+            $(canvas).off('mousemove', dragRotate);
+            // determine if that was a click or a drag
+            if (culumlativeMotion < 10) {
+                // didn't move much, that counts as a click
+                boardClick(event);
+            }
+        })
+        function dragRotate(event) {
+            // how much did it move, in which direction?
+            if (typeof (last_position) != 'undefined') {
+                //get the change from last position to this position
+                deltaX = last_position.x - event.clientX;
+                deltaY = last_position.y - event.clientY;
+                // add to culumlative motion (which make the differene between click and drag)
+                culumlativeMotion += Math.abs(deltaX) + Math.abs(deltaY);
+            }
+            // save current position as last_position for next time
+            last_position = {
+                x: event.clientX,
+                y: event.clientY
+            };
+            // apply rotations on x and y axes
+            let xAxis = new THREE.Vector3(1, 0, 0);
+            let yAxis = new THREE.Vector3(0, -1, 0);
+            icosa.rotateOnWorldAxis(xAxis, -deltaY / 100);
+            icosa.rotateOnWorldAxis(yAxis, deltaX / 100);
+            }
+
+        function boardClick(event) {
             // find where we have clicked within the canvas
             mousePosition.x = ((event.clientX - canvasPosition.left) / canvas.width) * 2 - 1;
             mousePosition.y = -((event.clientY - canvasPosition.top) / canvas.height) * 2 + 1;
@@ -71,8 +128,8 @@ var HexaSphere = {
 
             // did we get anything?  was there an intersection?
             if (intersects.length > 0) {
-                console.log('clicked at: ', intersects[0].point);
-                
+                // console.log('clicked at: ', intersects[0].point);
+
                 // now find the nearest node
                 let clickedAt = icosa.worldToLocal(intersects[0].point);
                 let found = false;
@@ -99,6 +156,7 @@ var HexaSphere = {
                 if (go.TryPlayStone(nearestNode.index, go.turn)) {
                     // create a stone
                     let goStone = shapes.goStone(["black", "white"][go.turn]);
+
                     // enlarge and flatten it
                     goStone.scale.set(20, 20, 10);
 
@@ -110,76 +168,41 @@ var HexaSphere = {
 
                     // attach it
                     icosa.add(goStone);
+
+                    // save a reference in the board
+                    go.board.nodes[nearestNode.index].stone.object = goStone;
+
+                    if (go.capturedStones.length > 0) {
+                        // some stones were captured, we need to make them disappear
+                        go.capturedStones.forEach(stone => {
+                            stone.object.size = stone.object.scale.x;
+                            let shrink_interval = setInterval(() => {
+                                // shrink
+                                stone.object.scale.set(stone.object.size, stone.object.size, stone.object.size / 2);
+                                stone.object.size -= 1;
+                                if (stone.object.size <= 0) {
+                                    // it has disappeared, delete it from scene
+                                    icosa.remove(stone.object);
+                                    clearInterval(shrink_interval);
+                                }
+                            }, 17);
+                        });
+                        go.capturedStones = [];
+                    }
                 }
                 else {
                     // no go
                     console.log("you can't play there.");
                 }
             }
-        })
-
-        // create a point light
-        var pointLight = new THREE.PointLight(0xFFFFFF);
-
-        // set its position
-        pointLight.position.x = 10;
-        pointLight.position.y = 50;
-        pointLight.position.z = 1300;
-
-        // add to the scene
-        scene.add(pointLight);
-        // animate
-        function animate() {
-            // test.rotate(icosa);
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        }
-        animate();
-        // var cross = new THREE.Quaternion().setFromAxisAngle();
-        var last_position;
-        var deltaX, deltaY;
-        var $body = $('body');
-        $body.on('mousedown', function (event) {
-            last_position = {
-                x: event.clientX,
-                y: event.clientY
-            };                    
-            $body.on('mousemove', dragRotate);
-        });
-        $body.on("mouseup", function () {
-            $body.off('mousemove', dragRotate);
-        })
-        function dragRotate(event) {
-            // how much did it move, in which direction?
-            if (typeof (last_position) != 'undefined') {
-                //get the change from last position to this position
-                deltaX = last_position.x - event.clientX;
-                deltaY = last_position.y - event.clientY;
-            }
-            // save current position as last_position for next time
-            last_position = {
-                x: event.clientX,
-                y: event.clientY
-            };
-            // apply rotations on x and y axes
-            let xAxis = new THREE.Vector3(1, 0, 0);
-            let yAxis = new THREE.Vector3(0, -1, 0);
-            icosa.rotateOnWorldAxis(xAxis, -deltaY / 100);
-            icosa.rotateOnWorldAxis(yAxis, deltaX / 100);
-            // put something there to show that it happened
-            // icosa2.position.set(icosa.children[0].geometry.vertices[0]);
-            // console.log("marker at: ", icosa2.position);
-
-            // console.log("rotated on:", axis);
-            // console.log("position: ", icosa.position);
-            // icosa.rotation.x += 0.01;
-            // icosa.rotation.y += 0.01;
         }
     },
     deconstruct: function () {
         for (var i = scene.children.length - 1; i >= 0; i--) { 
             scene.remove(scene.children[i]);
         }
+        // remove the canvas element
+        document.body.removeChild(document.getElementById("3dcanvas"));
     }
 };
 
