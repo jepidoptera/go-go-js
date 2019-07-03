@@ -35,7 +35,7 @@ export default {
         });
 
         // load all meshes from file and build a single object from them
-        var meshes = hexaSphere.meshes.map((mesh) => {
+        meshes = hexaSphere.meshes.map((mesh) => {
             let geometry = new THREE.Geometry();
             // load vertices
             mesh.vertices.forEach(vertex => {

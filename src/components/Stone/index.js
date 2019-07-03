@@ -33,11 +33,11 @@ class Stone extends Component {
             <div className={"stoneContainer" + (this.state.captured ? " vanish" : "") } 
                 style={this.state.style}>
                 
-                {this.props.color == "white"
+                {this.props.color === "white"
                     // white stone
                     ? <img className="stoneImg" src={WhiteStone} alt="white stone" ></img >
                     : (
-                        this.props.color == "black"
+                        this.props.color === "black"
                             // black stone
                             ? < img className="stoneImg" src={BlackStone} alt="black stone" ></img >
                             // no stone here
