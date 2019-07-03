@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import textureImage from "../../images/texture2.png";
 import hexaSphere from "../../models/hexasphere2.json"
-import * as MESHLINE from 'three.meshline';
+// import * as MESHLINE from 'three.meshline';
 
 var $ = require("jquery");
 
