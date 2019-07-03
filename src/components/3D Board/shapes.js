@@ -4,8 +4,6 @@ import textureImage from "./sideline.png";
 import hexaSphere from "../../models/hexasphere2.json"
 // import * as MESHLINE from 'three.meshline';
 
-var $ = require("jquery");
-
 // let's try some tests
 export default {
 

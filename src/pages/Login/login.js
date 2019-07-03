@@ -6,7 +6,7 @@ $(document).ready(() => {
     // });  
     $("#loginCredentials").ajaxForm(function(res) {
         console.log("got a login response")
-        console.log("HEres the Response Body: ", res.body);
+        console.log("HEres the Response: ", res);
     })
     // $("#loginCredentials").submit(event => {
     //     event.preventDefault();
