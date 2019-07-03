@@ -115,15 +115,14 @@ var go = {
 
         // if the stone that was just played would be captured, it isn't a legal move
         // this works because a stone is captured by all neighbors at once
-        if (captures === [] &&
+        if (captures.length === 0 &&
             this.Captures(this.board.nodes[location].neighbors[0]).length > 0) {
-            
+
             // take it back
             this.board.nodes[location].stone = this.nullStone;
             this.NextTurn();
             return false;
         }
-
         // ko rule
         if (captures.length === 1) {
             console.log("captures: ", captures, " ko stone: ", [this.koStone]);
