@@ -7,6 +7,7 @@ import HexaGame from './pages/HexaGame';
 import StandardGame from './pages/StandardGame';
 import Login from './pages/Login';
 import GameOptions from './pages/GameOptions';
+import GameLobby from './pages/GameLobby';
 
 class App extends Component {
     state = {
@@ -36,6 +37,7 @@ class App extends Component {
                     // it needs its originating component (this) passed as a parameter
                     (boardType, boardSize) => this.startGame(this, boardType, boardSize)
                 } />} />
+                <Route exact path="/game/lobby" component={GameLobby} />
             </Router>
         );
     }

@@ -8,8 +8,8 @@ $(document).ready(() => {
         console.log("got a login response: ", res.authToken);
         // save username and authtoken to session storage
         sessionStorage.setItem("authToken", res.authToken);
-        sessionStorage.setItem("username", $(`input[name='${username}']`))
-        window.location.href = "/gameLobby";
+        sessionStorage.setItem("username", $("input[name='username']"))
+        window.location.href = "/game/lobby";
     })
     // $("#loginCredentials").submit(event => {
     //     event.preventDefault();
