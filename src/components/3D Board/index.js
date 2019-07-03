@@ -24,6 +24,9 @@ var HexaSphere = {
         // initialize game
         go.initialize("hex", 2);
 
+        // make a temp stone that appears when you initially click a spot
+        // but doesn't become permanent until you click again
+
         // set up nodes
         go.board.nodes = nodes.map((node, i) => {
             return {
@@ -86,6 +89,7 @@ var HexaSphere = {
             culumlativeMotion = 0;
             $(canvas).on('mousemove', dragRotate);
         });
+
         $("body").on("mouseup", function (event) {
             // let off the mouse drag
             $(canvas).off('mousemove', dragRotate);
@@ -95,6 +99,7 @@ var HexaSphere = {
                 boardClick(event);
             }
         })
+
         function dragRotate(event) {
             // how much did it move, in which direction?
             if (typeof (last_position) != 'undefined') {
@@ -114,7 +119,7 @@ var HexaSphere = {
             let yAxis = new THREE.Vector3(0, -1, 0);
             icosa.rotateOnWorldAxis(xAxis, -deltaY / 100);
             icosa.rotateOnWorldAxis(yAxis, deltaX / 100);
-            }
+        }
 
         function boardClick(event) {
             // find where we have clicked within the canvas
@@ -154,22 +159,22 @@ var HexaSphere = {
 
                 if (go.TryPlayStone(nearestNode.index, go.turn)) {
                     // create a stone
-                    let goStone = shapes.goStone(["black", "white"][go.turn]);
+                    tempStone = shapes.goStone(["black", "white"][go.turn]);
 
                     // enlarge and flatten it
-                    goStone.scale.set(20, 20, 10);
+                    tempStone.scale.set(20, 20, 10);
 
                     // set it in place
-                    goStone.position.set(clickedAt.x, clickedAt.y, clickedAt.z);
+                    tempStone.position.set(clickedAt.x, clickedAt.y, clickedAt.z);
 
                     // align it with the board
-                    goStone.lookAt(new THREE.Vector3(0, 0, 0));
+                    tempStone.lookAt(new THREE.Vector3(0, 0, 0));
 
                     // attach it
-                    icosa.add(goStone);
+                    icosa.add(tempStone);
 
                     // save a reference in the board
-                    go.board.nodes[nearestNode.index].stone.object = goStone;
+                    go.board.nodes[nearestNode.index].stone.object = tempStone;
 
                     if (go.capturedStones.length > 0) {
                         // some stones were captured, we need to make them disappear

@@ -83,6 +83,8 @@ var go = {
         return neighbors;
     },
 
+    /// returns true/false depending on whether "location" is a legal move for "color"
+    /// but leaves the game state just as it was when finished.
     TryPlayStone: function (location, color) {
         // gotta play in this.turn
         if (color !== this.turn) return false;
@@ -105,17 +107,16 @@ var go = {
             return false;
         }
 
-        // legal move, go ahead and capture them
-        if (captures.length > 0) {
-            this.CaptureStones(captures);
+        else if (captures.length > 0) {
+            // legal move. capturing is only even illegal in a ko situation
+            this.board.nodes[location].stone = this.nullStone;
+            return true;
         }
 
-        // next this.turn...
-        this.NextTurn();
-
         // if the stone that was just played would be captured, it isn't a legal move
-        // this works because a stone is captured by all neighbors at once
-        if (captures.length === 0 &&
+        else if (captures.length === 0 && this.NextTurn() &&
+            // we do this "capture" without adding any additional stones,
+            // so it returns a value only if the stone is already surrounded
             this.Captures(this.board.nodes[location].neighbors[0]).length > 0) {
 
             // take it back
@@ -123,9 +124,25 @@ var go = {
             this.NextTurn();
             return false;
         }
+    },
+
+    PlayStone(location, color) {
+        if (!this.TryPlayStone(location, color)) {
+            console.log("illegal move @", location, "by", ["black", "white"][color]);
+            return;
+        }
+
+        // place the stone
+        this.board.nodes[location].stone = new this.Stone(this.turn, location);
+
+        // check for captures
+        let captures = this.Captures(location);
+
+        // capture them, if there are any
+        if (captures) this.CaptureStones(captures);
+
         // ko rule
         if (captures.length === 1) {
-            console.log("captures: ", captures, " ko stone: ", [this.koStone]);
             console.log("ko stone at: ", location);
             this.koStone = location;
         }
@@ -174,6 +191,7 @@ var go = {
     {
         // switch turns
         this.turn = (this.turn === this.stone.white) ? this.stone.black : this.stone.white;
+        return true;
     },
 
     GameOver : function () {
