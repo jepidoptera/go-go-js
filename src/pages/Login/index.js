@@ -5,7 +5,7 @@ import "./login.js";
 export default function (props) {
     return (
         <div>
-            <h3>Log in to your Ethereum Go account:</h3>
+            <h3>Log in to Ethereum Go:</h3>
             {/* https://gogobackend.azurewebsites.net */}
             {/* localhost:56533 */}
             <form action= "https://gogobackend.azurewebsites.net/api/user/login" id="loginCredentials" method="post" >

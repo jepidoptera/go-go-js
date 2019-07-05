@@ -18,11 +18,11 @@ class App extends Component {
 
     // }
     
-    startGame(self, boardType, boardSize) {
-        // set board size state
-        self.setState({ boardSize: boardSize });
-        // alert("board size: " + boardSize);
-    }
+    // startGame(self, boardType, boardSize) {
+    //     // set board size state
+    //     self.setState({ boardSize: boardSize });
+    //     // alert("board size: " + boardSize);
+    // }
 
     render() {
         return (
@@ -31,12 +31,8 @@ class App extends Component {
                 <Route exact path="/" component={Login} />
                 <Route exact path="/game/3d" render={() => <HexaGame  boardSize={this.state.boardSize}/>} />
                 <Route exact path="/game/standard" render={() => <StandardGame boardSize={this.state.boardSize} />}/>
-                <Route exact path="/game/options" render={() => <GameOptions startGame={
-                    // since this function will be called from another component,
-                    // but needs to modify this component's state,
-                    // it needs its originating component (this) passed as a parameter
-                    (boardType, boardSize) => this.startGame(this, boardType, boardSize)
-                } />} />
+                <Route exact path="/game/offline/options" render={() => <GameOptions />} />
+                <Route exact path="/game/online/options" render={() => <GameOptions online={true} />} />
                 <Route exact path="/game/lobby" component={GameLobby} />
             </Router>
         );

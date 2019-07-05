@@ -40,5 +40,23 @@ export default {
         .catch(err => {
             console.log("error fetching challenge game data: ", err);
         })
+    },
+    loadPlayer: function (username, callback) {
+        $.get(this.url + "/user/info/" + username)
+            .then(data => {
+                // console.log("api fetched: ", data);
+                // comes back as a string, so parse it.
+                callback(JSON.parse(data));
+            })
+            .catch(err => {
+                console.log("error fetching player data: ", err);
+            })
+    },
+    loadAllPlayers: function (callback) {
+        // get me everything on everyone.
+        $.get(this.url + "/user/all")
+            .then(data => {
+                callback(data);
+            })
     }
 }

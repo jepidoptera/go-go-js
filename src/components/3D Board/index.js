@@ -11,12 +11,12 @@ var HexaSphere = {
     //     return false;
     // });
 
-    construct: function () {
+    construct: function (size) {
         console.log("script started.");
 
         // a scene to start with
         scene = new THREE.Scene();
-        let { object: icosa, nodes } = shapes.icosahedron();
+        let { object: icosa, nodes } = shapes.icosahedron(size);
 
         // console.log(testObject);
         scene.add(icosa);

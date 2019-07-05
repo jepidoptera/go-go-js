@@ -33,6 +33,8 @@ export default {
         });
 
         // load all meshes from file and build a single object from them
+        // while we're at it let's clock just how much time we're wasting
+        let start = Date.now();
         meshes = hexaSphere.meshes.map((mesh) => {
             let geometry = new THREE.Geometry();
             // load vertices
@@ -44,38 +46,7 @@ export default {
                 geometry.faces.push(new THREE.Face3(mesh.faces[i], mesh.faces[i+1], mesh.faces[i+2]));
             };
 
-            // now divide the mesh into hexes!
-            // geometry.vertices[0].isHex = true;
-            // somehow
-            // for (let i = 0; i < geometry.vertices.length; i++) {
-            //     geometry.vertices[i].neighbors = [];
-            // }
-            // // find the neighbors of each vertex
-            // for (let i = 0; i < geometry.faces.length; i++) {
-            //     // console.log(geometry.faces[i]);
-            //     if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].b)) {
-            //         geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].b)
-            //     }
-            //     if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].c)) {
-            //         geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].c)
-            //     }
-            //     if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].a)) {
-            //         geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].a)
-            //     }
-            //     if (!geometry.vertices[geometry.faces[i].a].neighbors.includes(geometry.faces[i].c)) {
-            //         geometry.vertices[geometry.faces[i].a].neighbors.push(geometry.faces[i].c)
-            //     }
-            //     if (!geometry.vertices[geometry.faces[i].b].neighbors.includes(geometry.faces[i].a)) {
-            //         geometry.vertices[geometry.faces[i].b].neighbors.push(geometry.faces[i].a)
-            //     }
-            //     if (!geometry.vertices[geometry.faces[i].c].neighbors.includes(geometry.faces[i].b)) {
-            //         geometry.vertices[geometry.faces[i].c].neighbors.push(geometry.faces[i].b)
-            //     }
-            // }
-
             // let's find the nodes, where lines intersect and you can place a stone
-            // while we're at it let's clock just how much time we're wasting with the inefficient algorithm
-            let start = Date.now();
             let nodelocations = hexaSphere.nodes.map(node => node.position);
             let hexes = 0;
             for (let i = 0; i < geometry.vertices.length; i++) {
@@ -99,22 +70,6 @@ export default {
                 }
             }
             console.log("hexes: ", hexes);
-            console.log("Time to calculate: ", (Date.now() - start), "ms.")
-
-            // // now for each neighbor of each pentagon...
-            // for (let i = 0; i < pentagons.length; i++) {
-            //     // or rather, for each adjacent pair of neighbors...
-            //     let n1 = geometry.vertices[pentagons[i].neighbors[0]];
-            //     let n2 = geometry.vertices[pentagons[i].neighbors[1]];
-
-            //     var common = $.grep(n1.neighbors, function (element) {
-            //         return $.inArray(element, n2.neighbors) !== -1;
-            //     });
-            //     // there should be two - get the one which is != pentagons[i]
-            //     common = common[1] === pentagons[i].index ? common[0] : common[1];
-            //     geometry.vertices[common].isHex = true;
-            //     // n1.isHex = false;
-            // }
 
             // for a level-2 spheroid, that should be all we have to do
             // so now we set the uvs
@@ -140,19 +95,11 @@ export default {
 
             // console.log(mesh);
             mesh = new THREE.Mesh(geometry, material);
-            // object3d.add(mesh);
-            // wireframe
-            // let geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
-            // let mat = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 6 });
-            // let wireframe = new THREE.LineSegments(geo, mat);
-            // let line = new MESHLINE.MeshLine();
-            // line.setGeometry(geometry, p => 3);
-            // let meshMaterial = new MESHLINE.MeshLineMaterial(
-            //     { resolution: new THREE.Vector2(window.innerWidth, window.innerHeight)});
-            // let wireframe = new THREE.Mesh(line.geometry, meshMaterial); // this syntax could definitely be improved!
-            // mesh.add(wireframe);
             return mesh;
         })
+        // so how long did that take?
+        console.log("Time to calculate: ", (Date.now() - start), "ms.")
+
         let object3d = new THREE.Object3D();
         object3d.add(...meshes);
         console.log("final object: ", object3d);

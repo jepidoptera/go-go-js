@@ -314,16 +314,16 @@ var go = {
                     let { group, neighbors } = this.GroupAlike(i);
                     let contestedTerritory = group;
                     // count white vs. black stones surrounding the territory
-                    for (let p in neighbors) {
-                        score[this.board.nodes[p].stone.color]++;
+                    for (let n in neighbors) {
+                        score[this.board.nodes[n].stone.color]++;
                     }
                     // are there more black stones or white stones bordering this territory?
                     // this is kinda crude, but should suffice in most (all?) circumstances
                     let winner = Math.max(...score);
                     territory[winner] = territory[winner].concat(contestedTerritory);
                     // mark the whole region as scored
-                    for (let p in nullTerritory) {
-                        this.board.nodes[p].owner = winner;
+                    for (let n in nullTerritory) {
+                        this.board.nodes[n].owner = winner;
                     }
                 }
                 else { 
