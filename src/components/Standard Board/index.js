@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import "./board.css";
 import goboard from "./goboard.png";
 import go from "../../js/go";
@@ -6,22 +6,21 @@ import Stone from "../../components/Stone";
 
 var $ = require("jquery");
 
-// Here we create a component that will rotate everything we pass in over two seconds
-// const CapturedStone = styled.Stone`
-//   animation: ${vanish} 2s linear 1;
-// `;
+class Board extends PureComponent {
+    state = {
+        tempstone: { location: -1 }
+    }
 
-class Board extends Component {
     constructor(props) {
         super();
-        // set up board
-        go.setupBoard("square", props.boardSize);
-
-        console.log("board generated node set: ", go.board.nodes);
+        // initialize board
+        go.initialize(go.createSquareBoard(props.boardSize));
     }
-    componentDidMount () {
+
+    componentDidMount() {
         // copy of self for use within the function
         var self = this;
+
         // board click event
         $("#board").click(function (event) {
             // calculate board index from mouse coordinates
@@ -33,7 +32,17 @@ class Board extends Component {
             // try to play a stone
             if (go.TryPlayStone(index, go.turn)) {
                 // that must have worked
-                console.log("played stone at ", x, ", ", y);
+                // is there already a tempstone here?
+                if (self.state.tempstone.location === index) {
+                    // do it for real
+                    go.PlayStone(index, go.turn);
+                    console.log("played stone at ", x, ", ", y);
+                }
+                else {
+                    console.log("temp stone at: ", index);
+                    // you can still change your mind
+                    self.setState({ tempstone: new go.Stone(go.turn, index) })
+                }
                 // console.log("board is now:", go.board);
                 self.forceUpdate();
             }
@@ -41,23 +50,35 @@ class Board extends Component {
         });
     }
 
+    tempStone() {
+
+    }
+
     render() {
-        // console.log("rendering: ", go.board.nodes);
+        // console.log("rendering board: ", go.board.nodes);
         let boardSize = {
             "height": (100 * (19 / (go.board.size || 1))) + "%",
             "width": (100 * (19 / (go.board.size || 1))) + "%"
         }
-        return (<div id="board">
-            <img src={goboard} id="boardImg" style={boardSize} alt="game board" ismap="true"></img>
-            {/* either do or don't place a stone at each index */}
-            {go.board.nodes.map(node => goStone(node.stone))}
-            {/* place a vanishing stone for those that have been captured */}
-            {go.captures.map(stone => goStone(stone, true))}
-            </div>)
+        let tempStone = {
+            "opacity": "0.5",
+        }
+        return  <div id="board">
+                    <img src={goboard} id="boardImg" style={boardSize} alt="game board"></img>
+                    {/* either do or don't place a stone at each index */ }
+                    { go.board.nodes.map(node => goStone(node.stone)) }
+                    {/* place a vanishing stone for those that have been captured */ }
+                    { go.capturedStones.map(stone => goStone(stone, "captured")) }
+                    {/* temp stone */}
+                    {goStone(this.state.tempstone, "temp")}
+                </div>
+        // return < div id="board" >
+        //             <img src={goboard} id="boardImg" style={boardSize} alt="game board"></img>
+        //         </div >
     }
 };
 
-function goStone(stone, captured) {
+function goStone(stone, style) {
     // only draw stones which have a color
     if ([go.stone.black, go.stone.white].includes(stone.color)) {
         // get x/y coordinates
@@ -76,7 +97,12 @@ function goStone(stone, captured) {
             color: ["black", "white"][stone.color]
         }
         // if captured is set to true, the stone will immediately shrink and disappear
-        return (<Stone {...props} captured={captured}/>)
+        if (style === "captured")
+            return (<Stone {...props} captured={true} />)
+        else if (style === "temp")
+            return (<Stone {...props} temp={true}/>)
+        else // default
+            return (<Stone {...props} />)
     }
     // if color == -1, render nothing
     else return null;

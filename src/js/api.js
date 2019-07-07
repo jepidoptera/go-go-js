@@ -1,7 +1,14 @@
 var $ = require("jquery");
 export default {
     url: "https://gogobackend.azurewebsites.net/api",
-    loadGames: function (callback) {
+    loadGame: function (gameID, callback) {
+        // load a specific game
+        $.get(this.url + "/games/" + gameID).then(data => {
+            callback(data);
+        })
+    },
+    loadAllGames: function (callback) {
+        // get all the info about all the games
         $.get(this.url + "/games/all")
         .then(data => {
             // console.log("api fetched: ", data);
@@ -41,6 +48,44 @@ export default {
             console.log("error fetching challenge game data: ", err);
         })
     },
+    newGame: function (game, callback) {
+        // validate game data
+        // don't really need to do this, the server will handle it
+        if (!game.player1) {
+            let message = "can't start game with no player1!"
+            console.log(message);
+            return {message: message };
+        }
+        // send new game request to server
+        $.ajax({
+            url: this.url + "/games/new",
+            data: game,
+            method: "POST"
+        }).done(data => {
+            // send the data to the callback
+            // this will be { gameID } if success, { message } if failure
+            callback(data);
+        })
+    },
+    joinGame: function (game, callback) {
+        // validate game data
+        // don't really need to do this, the server will handle it
+        if (!game.player1) {
+            let message = "can't start game with no player1!"
+            console.log(message);
+            return { message: message };
+        }
+        // send new game request to server
+        $.ajax({
+            url: this.url + "/games/new",
+            data: game,
+            method: "POST"
+        }).done(data => {
+            // send the data to the callback
+            // this will be { gameID } if success, { message } if failure
+            callback(data);
+        })
+    },
     loadPlayer: function (username, callback) {
         $.get(this.url + "/user/info/" + username)
             .then(data => {
@@ -55,6 +100,26 @@ export default {
     loadAllPlayers: function (callback) {
         // get me everything on everyone.
         $.get(this.url + "/user/all")
+            .then(data => {
+                callback(JSON.parse(data));
+            })
+    },
+    ping: function (username, authtoken, callback) {
+        $.ajax({
+            url: this.url + "/user/ping",
+            method: "POST",
+            data: {username: username, authtoken: authtoken}
+        })
+            .then(data => {
+                callback(data);
+            })
+    },
+    authorizePlayer: function (username, authtoken, callback) {
+        $.ajax({
+            url: this.url + "/user/authorize",
+            method: "POST",
+            data: { username: username, authtoken: authtoken }
+        })
             .then(data => {
                 callback(data);
             })

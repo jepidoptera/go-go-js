@@ -1,44 +1,38 @@
 import * as THREE from 'three';
 import shapes from "./shapes";
 import go from "../../js/go";
+
 var $ = require("jquery");
-var scene;
 
-var HexaSphere = {
-    // $(Document).ready(function() {
-    //     // is this thing on??
-    //     console.log("script started.");
-    //     return false;
-    // });
+const HexaSphere = {
+    scene: {},
 
-    construct: function (size) {
+    construct: function (boardSize) {
+    
+        // build a 3d object using three.js
         console.log("script started.");
 
-        // a scene to start with
-        scene = new THREE.Scene();
-        let { object: icosa, nodes } = shapes.icosahedron(size);
+        // load hexasphere object
+        let { object: icosa, nodes } = shapes.icosahedron(boardSize);
 
-        // console.log(testObject);
-        scene.add(icosa);
-
-        // initialize game
-        go.initialize("hex", 2);
-
-        // make a temp stone that appears when you initially click a spot
-        // but doesn't become permanent until you click again
-        var tempStone = {location: -1};
-
-        // set up nodes
-        go.board.nodes = nodes.map((node, i) => {
+        // initialize go game with loaded nodes
+        go.initialize(nodes.map((node, i) => {
             return {
                 neighbors: node.neighbors,
                 position: new THREE.Vector3(node.position.x, node.position.y, node.position.z),
                 index: i,
-                stone: go.nullStone
             }
-        });
-        // play the game on this node set
-        console.log("game nodes are:", go.board.nodes);
+        }));
+
+        // a scene to start with
+        HexaSphere.scene = new THREE.Scene();
+
+        // console.log(testObject);
+        HexaSphere.scene.add(icosa);
+
+        // make a temp stone that appears when you initially click a spot
+        // but doesn't become permanent until you click again
+        var tempStone = {location: -1};
 
         // set up camera
         var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
@@ -66,13 +60,13 @@ var HexaSphere = {
         pointLight.position.y = 50;
         pointLight.position.z = 1300;
 
-        // add to the scene
-        scene.add(pointLight);
+        // add to the HexaSphere.scene
+        HexaSphere.scene.add(pointLight);
         // animate
         function animate() {
             // test.rotate(icosa);
             requestAnimationFrame(animate);
-            renderer.render(scene, camera);
+            renderer.render(HexaSphere.scene, camera);
         }
         animate();
 
@@ -227,13 +221,17 @@ var HexaSphere = {
                 }
             }
         }
-    },
+    }, 
     deconstruct: function () {
-        for (var i = scene.children.length - 1; i >= 0; i--) { 
-            scene.remove(scene.children[i]);
+        // break it down
+        if (HexaSphere.scene.children) {
+            // remove everything from the scene
+            for (var i = HexaSphere.scene.children.length - 1; i >= 0; i--) {
+                HexaSphere.scene.remove(HexaSphere.scene.children[i]);
+            }
+            // remove the canvas element
+            document.body.removeChild(document.getElementById("3dcanvas"));
         }
-        // remove the canvas element
-        document.body.removeChild(document.getElementById("3dcanvas"));
     }
 };
 

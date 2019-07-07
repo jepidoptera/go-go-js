@@ -14,7 +14,8 @@ class Stone extends Component {
                 "top": props.y,
                 "left": props.x,
                 "height": props.size + "vmin",
-                "width": props.size + "vmin"
+                "width": props.size + "vmin",
+                "opacity": (props.temp ? "0.5" : "1")
             },
             // always start in a non-captured state
             captured: false,

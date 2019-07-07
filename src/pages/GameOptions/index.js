@@ -1,46 +1,36 @@
 import React, {Component} from 'react';
 import { withRouter } from "react-router-dom";
 import api from "../../js/api";
+import localPlayer from "../../components/LocalPlayer";
+import OpponentList from "../../components/OpponentList";
+import Game from '../Game';
+
 var $ = require("jquery");
 
 // choosing options for the game
 class GameOptions extends Component {
     state = {
-        otherPlayers: {}
+        otherPlayers: []
     }
+
     componentDidMount() {
-        // if this is an online game, load list of other players
-        if (this.props.online) this.getPlayers();
+        // if this is an online game, our player, then all the other players
+        console.log("local player:", localPlayer);
+        if (!localPlayer.authorize) {
+            alert("you have been logged out.");
+            // back to the home page
+            this.props.history.push("/");
+        }
     }
-    getPlayers() {
-        // load player list from the server
-        api.loadAllPlayers(players => {
-            this.setState({ otherPlayers: players });
-        })
-    }
-    startGame() {
-        // get board type and size from form
-        let boardType = $("#boardType").val();
-        let boardSize = {
-            'standard': [9, 13, 19],
-            'hexasphere': [1, 2, 3]
-        }[boardType][$("#boardSize").val()];
-        // start the game with the provided constructor
-        this.props.startGame(boardType, boardSize);
-        let newURL = {
-            'standard': '/game/standard',
-            'hexasphere': '/game/3d'
-        }[boardType];
-        this.props.history.push(newURL);
-    }
+
     render() {
         return (
             <div>
                 <h3>Set game options:</h3>
                 <form action="" id="gameOptions" method="" >
                     Board Type: <select id="boardType">
-                        <option value="standard">standard</option>
-                        <option value="hexasphere">hexasphere</option>
+                        <option value="0">standard</option>
+                        <option value="2">hexasphere</option>
                     </select>
                     <br></br><br></br>
                     Board Size: <select id="boardSize">
@@ -51,26 +41,13 @@ class GameOptions extends Component {
                     <br></br><br></br>
                     {/* if this is an online game, show the other players you can challenge */}
                     {this.props.online
-                        ? (<div>
-                            Opponent:
-                            <select>
-                            <option>open challenge</option>
-                            {this.state.otherPlayers.map(player => {
-                                return (
-                                    <option>
-                                        {player.username}
-                                        {player.online
-                                            // show a little icon if the player is online
-                                            ? <span className="onLineIndicator"></span> : null}
-                                    </option>
-                                )
-                            })}
-                        </select></div>)
+                        ? <OpponentList localPlayer={localPlayer.username}/>
                         : null
                     }
+                    <br></br><br></br>
                     <button type="submit" onClick={(event) => {
                         event.preventDefault();
-                        this.startGame();
+                        startGame(this.props.online);
                     }}>Go!</button>
                     {/* lol */}
                 </form>
@@ -79,4 +56,43 @@ class GameOptions extends Component {
     }
 }
 
+const startGame = (online) => {
+    // get board type and size from form
+    let boardType = $("#boardType").val();
+    let boardSize = {
+        0: [9, 13, 19],
+        2: [1, 2, 3]
+    }[boardType][$("#boardSize").val()];
+    // navigate to game page
+    let newURL = "/game";
+    if (online) {
+        // generate a new game with API
+        let newGame = {
+            player1: localPlayer.username,
+            player2: $("select[name='otherPlayer'").val(),
+            authtoken: sessionStorage.getItem("authtoken"),
+            boardsize: boardSize,
+            mode: boardType
+        };
+        console.log("creating game...", newGame);
+        api.newGame(newGame, (data) => {
+            // if (data.gameID) {
+            //     newURL += "?gameID=" + data.gameID;
+            //     // start online game!
+            //     this.props.history.push(newURL);
+            // }
+            console.log("Created game", data);
+            alert("The gauntlet has been thrown.  You'll be alerted when "
+                + (Game.player2 || "someone") + " responds.");
+        })
+    }
+    else {
+        // add game type and board size as query parameters
+        newURL += "?boardType=" + boardType + "&boardSize=" + boardSize;
+        window.location.href = (newURL);
+    }
+}
+
 export default withRouter(GameOptions);
+
+export { startGame }

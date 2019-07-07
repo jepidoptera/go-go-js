@@ -5,6 +5,7 @@ var go = {
     stone: { empty: -1, black: 0, white: 1 },
     playOffline: false,
     capturedStones: [],
+    nodes: [],
     koStone: null,
     
     Player: class {
@@ -24,17 +25,18 @@ var go = {
         }
     },
 
-    initialize: function (boardType, boardSize) {
+    initialize: function (nodemap) {
 
-        this.board.size = boardSize;
         this.nullStone = new this.Stone(-1);
-        this.board.nodes = [];
         this.board.owner = [];
+        // set nullstone in each node
+        // it's just easier this way - really
+        this.board.nodes = nodemap.map(node => { return { ...node, stone: go.nullStone } });
+        // black always starts
         this.turn = this.stone.black;
 
         // create some players
         this.player = [
-            {},
             new this.Player(this.stone.black, "player1"),
             new this.Player(this.stone.white, "player2")
         ];
@@ -43,21 +45,19 @@ var go = {
         this.player[this.stone.white].opponent = this.player[this.stone.black];
         this.player[this.stone.black].opponent = this.player[this.stone.white];
 
-        // set nullstone in each node
-        // it's just easier this way - really
-        // square board doesn't come with a json file
-        if (boardType === "square") {
+        // play the game on this node set
+        console.log("game nodes are:", go.board.nodes);
+    },
+
+    createSquareBoard: function (boardSize) {
+        // we will need this again...
+        this.board.size = boardSize;
         // so we set up node neighbors programatically
-            for (let i = 0; i < boardSize * boardSize; i++) {
-                this.board.nodes[i] = { stone: this.nullStone };
-                this.board.nodes[i].neighbors = this.SquareNeighbors(i);
-            }
+        let nodes = [];
+        for (let i = 0; i < boardSize * boardSize; i++) {
+            nodes.push ({ neighbors: this.SquareNeighbors(i) });
         }
-        // else {
-        //     for (let i = 0; i < this.board.nodes.length; i++) {
-        //         this.board.nodes[i].stone = this.nullStone;
-        //     }
-        // }
+        return nodes;
     },
 
     indexFromCoors: function (x, y) {
@@ -328,7 +328,8 @@ var go = {
                 }
                 else { 
                     // we don't yet assign owners to nodes containing stones.
-                    // that happens in the next part.
+                    // that happens in the next part, where we determine
+                    // if those stones are alive or dead.
                 }
             }
         }
@@ -361,6 +362,7 @@ var go = {
                         this.board.nodes[p].owner = groupColor;
                     }
                 }
+
                 else {
                     // the group is surrounded and captured
                     deadStones[groupColor] = deadStones[groupColor].concat(group);

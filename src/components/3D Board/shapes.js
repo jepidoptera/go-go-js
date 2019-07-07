@@ -1,7 +1,7 @@
 // jshint multistr: true
 import * as THREE from 'three';
-import textureImage from "./sideline.png";
-import hexaSphere from "../../models/hexasphere2.json"
+import textureImage from "./images/sideline.png";
+import hexaSphere from "./models/hexasphere2.json"
 // import * as MESHLINE from 'three.meshline';
 
 // let's try some tests
