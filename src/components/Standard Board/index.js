@@ -50,31 +50,27 @@ class Board extends PureComponent {
         });
     }
 
-    tempStone() {
-
-    }
-
     render() {
         // console.log("rendering board: ", go.board.nodes);
         let boardSize = {
             "height": (100 * (19 / (go.board.size || 1))) + "%",
             "width": (100 * (19 / (go.board.size || 1))) + "%"
         }
-        let tempStone = {
-            "opacity": "0.5",
-        }
-        return  <div id="board">
-                    <img src={goboard} id="boardImg" style={boardSize} alt="game board"></img>
-                    {/* either do or don't place a stone at each index */ }
-                    { go.board.nodes.map(node => goStone(node.stone)) }
-                    {/* place a vanishing stone for those that have been captured */ }
-                    { go.capturedStones.map(stone => goStone(stone, "captured")) }
-                    {/* temp stone */}
-                    {goStone(this.state.tempstone, "temp")}
-                </div>
-        // return < div id="board" >
-        //             <img src={goboard} id="boardImg" style={boardSize} alt="game board"></img>
-        //         </div >
+        return (
+            <div id="board">
+                {/* board image */}
+                <img src={goboard} id="boardImg" style={boardSize} alt="game board"></img>
+
+                {/* either do or don't place a stone at each index */ }
+                {go.board.nodes.map(node => goStone(node.stone))}
+                
+                {/* place a vanishing stone for those that have been captured */ }
+                {go.capturedStones.map(stone => goStone(stone, "captured"))}
+                
+                {/* temp stone */}
+                {goStone(this.state.tempstone, "temp")}
+            </div>
+        )
     }
 };
 
