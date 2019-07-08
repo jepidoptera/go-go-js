@@ -6,8 +6,6 @@ import localPlayer from "../../components/LocalPlayer";
 import {startGame} from '../GameOptions';
 import OpponentList from '../../components/OpponentList';
 
-var $ = require("jquery");
-
 // choosing options for the game
 class GameLobby extends Component {
     state = {
@@ -22,13 +20,14 @@ class GameLobby extends Component {
         // we should call localPlayer.load() at the beginning of every pages that uses it
         // also remember to call localPlayer.unload() on componentWillUnmount()
         localPlayer.load(() => {
-            localPlayer.authorize(valid => {
-                if (!valid) {
-                    alert("you have been logged out.");
-                    // booted back to the home page.
-                    this.props.history.push("/");
-                }
-            })
+            // localPlayer.authorize(data => {
+            //     if (!data.valid) {
+            //         console.log("auth failed: ", data);
+            //         alert("you have been logged out.");
+            //         // booted back to the home page.
+            //         this.props.history.push("/");
+            //     }
+            // })
             // load games
             this.loadGames(() => this.setTab("open"));
             // check for new games once every ten seconds.
@@ -74,9 +73,8 @@ class GameLobby extends Component {
         switch (tabname) {
             case ("ongoing"): {
                 // find games which this player is involved in, and which have already started
-                let username = sessionStorage.getItem("username");
                 games = games.filter((game) => 
-                    ((game.player1 === username || game.player2 === username) &&
+                    ((game.white === localPlayer.username || game.black === localPlayer.username) &&
                         game.history.length > 0)
                 )
                 break;
@@ -84,7 +82,7 @@ class GameLobby extends Component {
             case ("open"): {
                 // find games which have no player2
                 games = games.filter((game) => 
-                    (game.player2 === "" && game.player1 !== localPlayer.username)
+                    (game.black === "" && game.white !== localPlayer.username)
                 )
                 break;
             }
@@ -92,7 +90,7 @@ class GameLobby extends Component {
                 // find games which have no history, but player2 == local player
                 console.log("finding challenges for: ", localPlayer.username);
                 games = games.filter((game) => 
-                    (game.player2 === localPlayer.username && game.history.length === 0)
+                    (game.black === localPlayer.username && game.history.length === 0)
                 )
                 break;
             }
@@ -101,29 +99,51 @@ class GameLobby extends Component {
         this.setState({ games: games, selectedTab: tabname });
     }
 
-    newGame() {
+    createGame() {
         startGame(true);
     }
 
     joinGame(gameID) {
-        
+        // we will try to join this game
+        api.joinGame(gameID, localPlayer.username, localPlayer.authtoken, data => {
+            if (data.error) {
+                // failed. express reason
+                console.log(data.error);
+                return;
+            }
+            // joined the game
+            // go to game page
+            this.props.history.push("/game?gameId=" + gameID)
+        })
     }
 
     dismissGame(gameID) {
-        
+        api.deleteGame(gameID, localPlayer.username, localPlayer.authtoken, data => {
+            if (data.error) {
+                // failed. express reason
+                console.log(data.error);
+                return;
+            }
+            // we have received confirmation of delete
+            // remove it from games list
+            this.setState({games: this.state.games.filter(
+                game => game.Id !== gameID
+            )})
+        })
     }
 
     render() {
         return (
-            <div>
-                <h3>Ethereum Go game lobby</h3>
-                <h4 className="playerTag">Logged in as: {localPlayer.username}
-                    <button
-                        className="inlineBtn"
-                        onClick={() => this.logOut()}>
-                        Log Out
-                    </button>
-                </h4>
+            <div id="gameLobby">
+                <h3>Ethereum Go game lobby
+                    <div className="playerTag">Logged in as: {localPlayer.username}
+                        <button
+                            className="inlineBtn"
+                            onClick={() => this.logOut()}>
+                            Log Out
+                        </button>
+                    </div>
+                </h3>
 
                 <div id="tabButtons">
                     <button className={"tabButton" + (this.state.selectedTab === "ongoing" ? " selected" : "")}
@@ -141,7 +161,7 @@ class GameLobby extends Component {
                             <th>Game Type</th>
                         </tr>
                         {/* horizontal line */}
-                        <tr className="noborder"><td colSpan="4"><hr></hr></td></tr>
+                        <tr className="noborder"><td colSpan="3"><hr></hr></td></tr>
 
                         {
                             this.state.selectedTab === "challenge"
@@ -149,7 +169,7 @@ class GameLobby extends Component {
                                     <td>
                                         <button
                                             className="gameActionBtn"
-                                            onClick={() => this.newGame()}>
+                                            onClick={() => this.createGame()}>
                                             Start a Game
                                         </button>
                                     </td>
@@ -177,13 +197,14 @@ class GameLobby extends Component {
                             return (
                                 <tr key={i}>
                                     {this.state.selectedTab !== "challenge"
-                                        ? (<td><button className="gameActionBtn" onclick={this.joinGame(game.Id)}>Join</button></td>)
+                                        ? (<td><button className="gameActionBtn" onClick={() => this.joinGame(game.Id)}>Join</button></td>)
                                         : (<td>
-                                            <button className="gameActionBtn" onclick={this.joinGame(game.Id)}>Accept</button>
-                                            <button className="gameActionBtn">Dismiss{this.dismissGame(game.ID)}</button>
+                                             <button className="gameActionBtn" onClick={() => this.joinGame(game.Id)}>Accept</button>
+                                            <button className="gameActionBtn" onClick={() => this.dismissGame(game.Id)}>Dismiss</button>
                                         </td>)
                                     }
-                                    <td>{game.player1}</td>
+                                    {/* for an ongoing game, show whichever player is not you */}
+                                    <td>{(game.white !== localPlayer.username ? game.white : game.black)}</td>
                                     <td>{game.description}</td>
                                     {/* <td>{game.online ? "yes" : "no"}</td> */}
                                 </tr>

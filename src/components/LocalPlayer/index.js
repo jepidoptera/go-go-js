@@ -5,6 +5,7 @@ class localPlayer {
     username = "";
     online = true;
     pingInterval = null;
+    isTurn = true;
 
     load (callback) {
         this.username = sessionStorage.getItem("username");
@@ -23,17 +24,19 @@ class localPlayer {
     startPinging () {
         console.log("logged in as:", this);
         // continually ping the server to let it know we're online
-        this.pingInterval = setInterval(() => {
-            console.log("ping...");
-            api.ping(this.username, this.authtoken, data => {
-                // server may sometimes return messages to us
-                let message = data.message;
-                if (message) {
-                    // show message
-                    alert(message);
-                }
-            })
-        }, 10000);
+        this.pingInterval = setInterval(() => this.ping(), 10000);
+    }
+
+    ping () {
+        console.log("ping...");
+        api.ping(this.username, this.authtoken, data => {
+            // server may sometimes return messages to us
+            let message = data.message;
+            if (message) {
+                // show message
+                alert(message);
+            }
+        })
     }
 
     setData(data) {

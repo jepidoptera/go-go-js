@@ -7,6 +7,7 @@ var go = {
     capturedStones: [],
     nodes: [],
     koStone: null,
+    nullStone: null,
     
     Player: class {
         constructor(color, name) {
@@ -25,13 +26,25 @@ var go = {
         }
     },
 
+    Opcodes:
+    {
+        black: 0,
+        white: 1,
+        pass: 2,
+        lake: 3,
+        illegal: 9,
+        gameover: 10,
+        joingame: 11,
+        ping: 15
+    },
+
     initialize: function (nodemap) {
 
         this.nullStone = new this.Stone(-1);
         this.board.owner = [];
         // set nullstone in each node
         // it's just easier this way - really
-        this.board.nodes = nodemap.map(node => { return { ...node, stone: go.nullStone } });
+        this.board.nodes = nodemap.map(node => { return { ...node, stone: this.nullStone } });
         // black always starts
         this.turn = this.stone.black;
 
@@ -85,9 +98,12 @@ var go = {
 
     /// returns true/false depending on whether "location" is a legal move for "color"
     /// but leaves the game state just as it was when finished.
-    TryPlayStone: function (location, color) {
-        // gotta play in this.turn
-        if (color !== this.turn) return false;
+    TryPlayStone: function (location, opcode) {
+        // non-playable opcodes
+        if (opcode === this.Opcodes.pass || opcode === this.Opcodes.ping) return true;
+
+        // otherwise, gotta play in turn
+        if (opcode !== this.turn) return false;
         
         // only play on a square that isn't occupied
         if ([this.stone.white, this.stone.black]
@@ -135,10 +151,15 @@ var go = {
         return allowMove;
     },
 
-    PlayStone(location, color) {
-        if (!this.TryPlayStone(location, color)) {
-            console.log("illegal move @", location, "by", ["black", "white"][color]);
-            return;
+    PlayStone(location, opcode) {
+        // don't ask if this is legal, just trust that it's already been tested
+        // if (!this.TryPlayStone(location, color)) {
+        //     console.log("illegal move @", location, "by", ["black", "white"][color]);
+        //     return;
+        // }
+        if (opcode === this.Opcodes.pass) {
+            // they player passed
+            this.PassTurn();
         }
 
         // place the stone
@@ -168,6 +189,10 @@ var go = {
         // played successfully
         console.log("played at: ", location);
         if (captures.length > 0) console.log("stones captured: ", this.capturedStones);
+
+        // reset passTurns
+        this.passTurns = 0;
+
         // next turn
         this.NextTurn();
         
@@ -295,7 +320,6 @@ var go = {
     {
         // find the score between two players on the given board
         let territory = [[], []];
-        let nullTerritory = territory[0];
         // total stones on the board for each side
         // in Chinese scoring, these are worth 1 point each
         let liveStones = [[], []];
@@ -319,10 +343,10 @@ var go = {
                     }
                     // are there more black stones or white stones bordering this territory?
                     // this is kinda crude, but should suffice in most (all?) circumstances
-                    let winner = Math.max(...score);
+                    let winner = score.indexOf(Math.max(...score));
                     territory[winner] = territory[winner].concat(contestedTerritory);
                     // mark the whole region as scored
-                    for (let n in nullTerritory) {
+                    for (let n in contestedTerritory) {
                         this.board.nodes[n].owner = winner;
                     }
                 }
@@ -387,8 +411,33 @@ var go = {
             deadWhiteStones: deadStones[this.stone.white],
             deadBlackstones: deadStones[this.stone.black],
         };
-    }
+    },
 
+    playThrough(history) {
+        // sanity check
+        if (!history) return;
+        console.log("replaying: ", history);
+        // replay history. take three bytes at a time
+        for (let i = 0; i < history.length; i += 3) {
+            let location = parseInt(history[i]) * 256 + parseInt(history[i + 1]);
+            let opcode = parseInt(history[i+2]);
+            // first two bytes are location.
+            // third is opcode
+            if (opcode === this.Opcodes.pass) {
+                this.NextTurn();
+            }
+            if (opcode <= 2) {
+                if(this.TryPlayStone(location, opcode)) {
+                    // add a stone to the board
+                    this.PlayStone(location, opcode);
+                }
+                else {
+                    console.log("error at history [", i, "]: location", location, "opcode", opcode)
+                }
+            }
+            else console.log("history [", i, "]: location", location, "opcode", opcode);
+        }
+    }
 }
 
 export default go;

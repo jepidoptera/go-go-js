@@ -18,13 +18,12 @@ class OpponentList extends Component {
     render() {
         // return a dropdown list of all existing opponents
         return (<div>
-            Opponent: <br></br>
             <select name="otherPlayer">
                 <option value="">open challenge</option>
                 {this.state.otherPlayers.map(player => {
                     return (
                         // don't show player's own username in the dropdown
-                        player.username != (this.props.localPlayer.username || this.props.localPlayer)
+                        player.username !== (this.props.localPlayer.username || this.props.localPlayer)
                             // but do show all other players
                             ? (<option key={player.username} value={player.username}>
                                 {player.username}

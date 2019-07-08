@@ -67,22 +67,38 @@ export default {
             callback(data);
         })
     },
-    joinGame: function (game, callback) {
-        // validate game data
-        // don't really need to do this, the server will handle it
-        if (!game.player1) {
-            let message = "can't start game with no player1!"
-            console.log(message);
-            return { message: message };
-        }
+    joinGame: function (gameID, username, authtoken, callback) {
         // send new game request to server
         $.ajax({
-            url: this.url + "/games/new",
-            data: game,
+            url: this.url + "/games/join/" + gameID,
+            data: {username: username, authtoken: authtoken},
             method: "POST"
         }).done(data => {
             // send the data to the callback
             // this will be { gameID } if success, { message } if failure
+            callback(data);
+        })
+    },
+    deleteGame: function (gameID, username, authtoken, callback) {
+        // send new game request to server
+        $.ajax({
+            url: this.url + "/games/delete/" + gameID,
+            data: {username: username, authtoken: authtoken},
+            method: "DELETE"
+        }).done(data => {
+            // send the data to the callback
+            // this will be { gameID } if success, { message } if failure
+            callback(data);
+        })
+    },
+    makeMove: function (gameID, x, y, color, username, authtoken, callback) {
+        $.ajax({
+            url: this.url + "/games/move/" + gameID,
+            data: {username: username, authtoken: authtoken, x: x, y: y, opcode: color},
+            method: "POST"
+        }).done(data => {
+            // send the data to the callback
+            // in this case, this will be the opponent's move
             callback(data);
         })
     },

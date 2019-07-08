@@ -10,14 +10,7 @@ import Login from './pages/Login';
 import GameOptions from './pages/GameOptions';
 import GameLobby from './pages/GameLobby';
 
-class Crapp extends Component {
-
-    componentWillUnmount() {
-        // this should never happen
-        alert("unmounting app!!!!")
-    }
-    
-    render() {
+const Crapp = function() {
         return ( <Router>
             <Route exact path="/" render={() => <Login />} />
             <Route exact path="/game" component={Game} />
@@ -27,7 +20,6 @@ class Crapp extends Component {
             <Route exact path="/game/lobby" render={() => <GameLobby/>} />
         </Router>
         )
-    }
 }
 
 export default Crapp;

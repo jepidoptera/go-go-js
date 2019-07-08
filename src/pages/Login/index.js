@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import "./login.css";
 import "jquery-form";
-import api from "../../js/api";
+// import api from "../../js/api";
 import localPlayer from "../../components/LocalPlayer";
 var $ = require("jquery");
 
@@ -14,13 +14,14 @@ class Login extends Component {
                 // save username and authtoken to session storage
                 let authtoken = ("authtoken", res.authtoken);
                 let username = ("username", $("input[name='username']").val());
-                sessionStorage.setItem("username", username);
                 sessionStorage.setItem("authtoken", authtoken);
+                sessionStorage.setItem("username", username);
 
                 // load player data
                 localPlayer.load(() => {
                     console.log("loaded player: ", localPlayer);
-                    localPlayer.startPinging();
+                    // get the name right from the server 
+                    sessionStorage.setItem("username", localPlayer.username);
                     // navigate to game lobby
                     window.location.href = "/game/lobby";
                 });

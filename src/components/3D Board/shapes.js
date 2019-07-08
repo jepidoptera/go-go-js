@@ -16,7 +16,7 @@ export default {
         return cube;
     },
 
-    icosahedron: function(nodes) {
+    icosahedron: function(size) {
         // we will return an array of meshes
         var meshes = [];
 
@@ -102,7 +102,7 @@ export default {
 
         let object3d = new THREE.Object3D();
         object3d.add(...meshes);
-        console.log("final object: ", object3d);
+        console.log("final object: ", { object: object3d, nodes: hexaSphere.nodes });
         return { object: object3d, nodes: hexaSphere.nodes };
     },
     
@@ -199,9 +199,6 @@ export default {
             color: (color === "black" ? 0x000000 : 0xffffff),
             // if temp stone, make it transparent
             ...(temp ? { transparent: true, opacity: 0.5 } : {}),
-            polygonOffset: true,
-            polygonOffsetFactor: 1, // positive value pushes polygon further away
-            polygonOffsetUnits: 1
         });
         let mesh = new THREE.Mesh(geometry, material);
 

@@ -1,6 +1,11 @@
+html {
+	filter: invert(100%);
+}
+
 body {
   text-align: center;
   overflow: hidden;
+  background-color: black;
 }
 
 .App-logo {
