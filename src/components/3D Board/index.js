@@ -127,7 +127,7 @@ const HexaSphere = {
 
         const boardClick = (event) => {
             // check if we are currently allowed to play or not
-            if (!this.ourTurn) {
+            if (!this.isTurn) {
                 // console.log("not our turn, says: ", this);  <--- scope??
                 // nope. this is because we're waiting for other player online.
                 return;
@@ -197,10 +197,12 @@ const HexaSphere = {
                         // attach it
                         this.sphere.add(tempStone);
 
+                        console.log("preliminary play at:", tempStone.location);
+
                     }
                     else {
                         // no go
-                        console.log("you can't play there.");
+                        console.log("you can't play there (" + nearestNode.index + ").");
                     }
                 }
 
@@ -248,7 +250,7 @@ const HexaSphere = {
         this.sphere.add(permStone);
         // save a reference in the board
         this.nodes[location].object = permStone;
-        console.log("nodes are now: ", this.go.board.nodes);
+        // console.log("nodes are now: ", this.go.board.nodes);
     },
 
     captureStones: function (stones) {

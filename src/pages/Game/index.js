@@ -84,8 +84,7 @@ class Game extends PureComponent {
 
         // standard flat board
         if (this.state.game.gameMode === 0) {
-            // TODO
-            console.log('game mode 0 not ready yet');
+            console.log("starting standard game...");
             // construct nodes array
             go.initialize(go.createSquareBoard(this.state.game.boardSize));
             // load game history
@@ -152,14 +151,17 @@ class Game extends PureComponent {
 
     move = (location) => {
         if (location >= 0) {
-            // add it to the virtual board
+            // a move has been made
+            // move will have already been validated, so I guess we don't need to again?
+
             // animate hexasphere
             if (this.state.game.gameMode === 2) {
-                // add move to local board
+                // add a visible 3d stone object
+                // do this first so that it's still the correct turn
                 HexaSphere.addStone(go.turn, location);
             }
 
-            // move will have already been validated, so I guess we don't need to again?
+            // play on the virtual board
             go.PlayStone(location, go.turn);
 
             // were any stones captured?
@@ -172,6 +174,7 @@ class Game extends PureComponent {
             // "ping" move
         }
 
+        // offline game
         if (!this.state.game.online) {
             // when not online, it's always localPlayer's turn
             localPlayer.isTurn = true;
@@ -180,12 +183,13 @@ class Game extends PureComponent {
             // update
             this.forceUpdate();
         }
-
+        // online game
         else {
             // online game - more to do
             // we must wait for the other player to play
             localPlayer.isTurn = false;
             HexaSphere.isTurn = false;
+            console.log("other player's turn.");
             // update (don't let them play out of turn!)
             // since this is a pureComponent we have to update even to change props
             this.forceUpdate();
@@ -195,7 +199,7 @@ class Game extends PureComponent {
 
             let ping = location === -1 ? go.Opcodes.ping : 0;
 
-            if (ping) console.log("waiting for opponent to move...");
+            console.log("broadcasting move: ", x, y, ping || localPlayer.color);
             // call the api
             api.makeMove(
                 this.state.game.id, x, y, ping || localPlayer.color, 
@@ -205,7 +209,6 @@ class Game extends PureComponent {
                     // an interesting setup here...
                     // the server sends no response until the opponent plays.
                     // that response will return here, even hours later (since there's no timeout)
-                    console.log("moved, then got response: ", res);
                     if (res.error) {
                         // move failed for some reason
                         console.log("move failed:", res);
@@ -222,16 +225,29 @@ class Game extends PureComponent {
                             console.log("error: illegal move ", move[0], move[1], move[2], " by opponent.")
                         }
                         else if (this.state.game.gameMode === 2) 
-                            // mark hex board
+                            // mark hex board while it's still the correct turn
                             HexaSphere.addStone(this.state.opponent.color, move[0] * 256 + move[1]);
 
                         go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
 
+                        // were any stones captured?
+                        if (this.state.game.gameMode === 2 && go.capturedStones.length > 0) {
+                            // animate the stones disappearing
+                            HexaSphere.captureStones(go.capturedStones);
+                        }
+
                         // return control
                         localPlayer.isTurn = true;
                         HexaSphere.isTurn = true;
+                        console.log(localPlayer.username + "'s turn.");
                         // update again
                         this.forceUpdate();
+
+                        // compare state
+                        // any deviation means we have a problem
+                        api.gameState(this.state.game.id, (data) => {
+                            go.compareState(data);
+                        })
                     }
                     else {
                         // this should never happen (sanity check)
@@ -250,7 +266,7 @@ class Game extends PureComponent {
     }
 
     render() {
-        console.log("rendering game page: ", go.board.nodes);
+        console.log("rendering game page");
         return (
             <div id='gameCanvas'>
                 <ScorePanel player={localPlayer} local={this.state.game.online} turn={go.turn===localPlayer.color}/>

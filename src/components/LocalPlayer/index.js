@@ -36,6 +36,11 @@ class localPlayer {
                 // show message
                 alert(message);
             }
+            else if (data.error) {
+                alert("you have been logged out.");
+                // booted back to the home page.
+                window.location.href = "/";
+            }
         })
     }
 
