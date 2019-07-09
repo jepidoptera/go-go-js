@@ -1,4 +1,7 @@
 #gameCanvas {
+    position: absolute;
     border: 1px solid black;
-    filter: invert(100)
+    filter: invert(100);
+    height: 100%;
+    width: 100%;
 }

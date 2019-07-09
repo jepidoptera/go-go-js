@@ -10,9 +10,15 @@
 .black {
     left: 0;
 }
+.black::after {
+    content: "(black)";
+}
 
 .white {
     right: 0;
+}
+.white::after {
+    content: "(white)";
 }
 
 .outline {

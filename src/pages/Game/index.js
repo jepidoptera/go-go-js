@@ -162,9 +162,6 @@ class Game extends PureComponent {
             // move will have already been validated, so I guess we don't need to again?
             go.PlayStone(location, go.turn);
 
-            // update
-            this.forceUpdate();
-
             // were any stones captured?
             if (this.state.game.gameMode === 2 && go.capturedStones.length > 0) {
                 // animate the stones disappearing
@@ -180,6 +177,8 @@ class Game extends PureComponent {
             localPlayer.isTurn = true;
             // if on hexasphere
             HexaSphere.isTurn = localPlayer.isTurn;
+            // update
+            this.forceUpdate();
         }
 
         else {
@@ -187,6 +186,9 @@ class Game extends PureComponent {
             // we must wait for the other player to play
             localPlayer.isTurn = false;
             HexaSphere.isTurn = false;
+            // update (don't let them play out of turn!)
+            // since this is a pureComponent we have to update even to change props
+            this.forceUpdate();
 
             let x = parseInt(location / 256);
             let y = parseInt(location % 256);
@@ -222,8 +224,8 @@ class Game extends PureComponent {
                         else if (this.state.game.gameMode === 2) 
                             // mark hex board
                             HexaSphere.addStone(this.state.opponent.color, move[0] * 256 + move[1]);
-                        else
-                            go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
+
+                        go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
 
                         // return control
                         localPlayer.isTurn = true;

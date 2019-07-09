@@ -228,7 +228,7 @@ const HexaSphere = {
         go.board.nodes.forEach(node => {
             if (node.stone !== go.nullStone) {
                 // place a stone here
-                this.move(node.stone.color, node.index);
+                this.addStone(node.stone.color, node.index);
                 newStones.push(node.stone);
             }
         })
@@ -277,7 +277,8 @@ const HexaSphere = {
                 HexaSphere.scene.remove(HexaSphere.scene.children[i]);
             }
             // remove the canvas element
-            document.body.removeChild(document.getElementById("3dcanvas"));
+            document.getElementById("gameCanvas")
+                .removeChild(document.getElementById("3dcanvas"));
         }
     }
 };
