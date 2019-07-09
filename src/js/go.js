@@ -442,7 +442,7 @@ var go = {
     compareState(stateArray) {
         // check if we are in sync with the server
         for (let i in stateArray) {
-            if (stateArray[i] != this.board.nodes[i].stone.color) {
+            if (stateArray[i] !== this.board.nodes[i].stone.color) {
                 console.log("state mismatch at node [" + i + "].");
                 console.log(stateArray, this.board.nodes.map(node => node.stone.color));
                 return false;

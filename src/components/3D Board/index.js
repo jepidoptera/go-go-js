@@ -9,8 +9,9 @@ const HexaSphere = {
     scene: {},
     nodes: [],
     go: {},
-    ourTurn: true,
+    isTurn: true,
     sphere: null, // this will be the main 3d model
+    camera: null, // this will be the camera through which we view the scene
 
     moveFunction: function(color, location) { 
         // this will be a callback to the parent component
@@ -44,8 +45,8 @@ const HexaSphere = {
         var tempStone = {location: -1};
 
         // set up camera
-        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-        camera.position.z = 1000;
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        this.camera.position.z = 1000;
 
         // renderer
         var renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -72,10 +73,10 @@ const HexaSphere = {
         // add to the HexaSphere.scene
         HexaSphere.scene.add(pointLight);
         // animate
-        function animate() {
+        const animate = () => {
             // test.rotate(this.sphere);
-            requestAnimationFrame(animate);
-            renderer.render(HexaSphere.scene, camera);
+            if (this.camera) requestAnimationFrame(animate);
+            renderer.render(HexaSphere.scene, this.camera);
         }
         animate();
 
@@ -139,7 +140,7 @@ const HexaSphere = {
             mousePosition.y = -((event.clientY - canvasPosition.top) / canvas.height) * 2 + 1;
 
             // find the intersection point with the main game object
-            rayCaster.setFromCamera(mousePosition, camera);
+            rayCaster.setFromCamera(mousePosition, this.camera);
             let intersects = rayCaster.intersectObjects(this.sphere.children, true);
 
             // did we get anything?  was there an intersection?
@@ -215,6 +216,9 @@ const HexaSphere = {
                     tempStone.location = -1;
                     // play a permanent stone
                     this.moveFunction(nearestNode.index);
+                    // point to face it
+                    this.rotateTowards(clickedAt);
+
                 }
             }
         }
@@ -245,7 +249,7 @@ const HexaSphere = {
         permStone.scale.set(20, 20, 10);
         permStone.position.set(this.nodes[location].position.x, this.nodes[location].position.y, this.nodes[location].position.z);
         // align it with the board
-        permStone.lookAt(new THREE.Vector3(0, 0, 0));
+        permStone.lookAt(this.sphere.position);
         // add to the scene
         this.sphere.add(permStone);
         // save a reference in the board
@@ -269,6 +273,19 @@ const HexaSphere = {
                 }
             }, 17);
         };
+    },
+
+    rotateTowards: function (target) {
+        // rotate the sphere to point the target at the camera
+        // can't mess with the actual target vector,
+        // because it's a reference to one of the nodes on our graph :|
+        let adjustedTarget = this.sphere.localToWorld(new THREE.Vector3(target.x, target.y, target.z));
+        let axis = new THREE.Vector3()
+            .crossVectors(adjustedTarget, this.camera.position).normalize();
+        let angle = this.camera.position.angleTo(adjustedTarget);
+        // console.log("rotating on axis:", axis, " by angle ", angle);
+        this.sphere.rotateOnWorldAxis(axis, angle);
+        // console.log("sphere ends at rotation:", this.sphere.rotation, "position:", this.sphere.position)
     },
 
     deconstruct: function () {

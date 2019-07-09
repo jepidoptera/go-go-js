@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import "./board.css";
 import goboard from "./goboard.png";
-import go from "../../js/go";
 import Stone from "../../components/Stone";
 
 var $ = require("jquery");

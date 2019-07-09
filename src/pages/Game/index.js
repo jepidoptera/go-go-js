@@ -141,6 +141,7 @@ class Game extends PureComponent {
         else {
             // if not online, there is no local stone color because both sides are local
             localPlayer.isTurn = true;
+            HexaSphere.isTurn = true;
             // default players
             localPlayer.username = "player1";
             localPlayer.color = 0;
@@ -198,8 +199,9 @@ class Game extends PureComponent {
             let y = parseInt(location % 256);
 
             let ping = location === -1 ? go.Opcodes.ping : 0;
+            let pass = location === -2 ? go.Opcodes.pass : 0;
 
-            console.log("broadcasting move: ", x, y, ping || localPlayer.color);
+            console.log("broadcasting move: ", x, y, ping || pass || localPlayer.color);
             // call the api
             api.makeMove(
                 this.state.game.id, x, y, ping || localPlayer.color, 
@@ -216,18 +218,21 @@ class Game extends PureComponent {
                     }
                     else if (res.move) {
                         // other player played
-                        // convert from bytes
                         console.log("other player responds with: ", res);
                         // parse string into numbers
                         let move = res.move.split(",").map(str => parseInt(str));
+                        let location = move[0] * 256 + move[1];
+                        let opcode = move[2];
                         // sanity check
-                        if (!go.TryPlayStone(move[0] * 256 + move[1], this.state.opponent.color)) {
+                        if (!go.TryPlayStone(location, opcode)) {
                             console.log("error: illegal move ", move[0], move[1], move[2], " by opponent.")
                         }
-                        else if (this.state.game.gameMode === 2) 
+                        else if (this.state.game.gameMode === 2 && opcode !== go.Opcodes.pass) {
                             // mark hex board while it's still the correct turn
-                            HexaSphere.addStone(this.state.opponent.color, move[0] * 256 + move[1]);
-
+                            HexaSphere.addStone(this.state.opponent.color, location);
+                            // rotate to face the new move
+                            HexaSphere.rotateTowards(HexaSphere.nodes[location]);
+                        }
                         go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
 
                         // were any stones captured?
