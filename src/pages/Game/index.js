@@ -231,7 +231,7 @@ class Game extends PureComponent {
                             // mark hex board while it's still the correct turn
                             HexaSphere.addStone(this.state.opponent.color, location);
                             // rotate to face the new move
-                            HexaSphere.rotateTowards(HexaSphere.nodes[location]);
+                            HexaSphere.rotateTowards(HexaSphere.nodes[location].position);
                         }
                         go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
 
