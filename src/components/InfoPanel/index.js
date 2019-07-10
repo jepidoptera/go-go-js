@@ -37,10 +37,18 @@ class InfoPanel extends Component {
         });
         // chat = "";
         event.target.chat.value = "";
+        this.scrollToBottom();
     }
 
     scrollToBottom = () => {
         this.messagesEnd.scrollIntoView({ behavior: "smooth" });
+        let chatHistory = document.getElementById("chatHistory");
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    chatFocus = () => {
+        // set focus to chat input
+        document.getElementsByName("chat")[0].focus();
     }
 
     render() {
@@ -79,8 +87,8 @@ class InfoPanel extends Component {
                     : this.props.game.currentPlayer + "'s "}
                 turn.
             </span>
-            <div id="chatPanel">
-                <div id="chatHistory" className="outline">
+            <div id="chatPanel" className="outline" >
+                <div id="chatHistory" onClick={this.chatFocus}>
                     {/* chat text goes here */}
                     {this.props.game.chatHistory
                         ? this.props.game.chatHistory.map((chat, i) => <p key={i}>{chat}</p>)
@@ -91,8 +99,8 @@ class InfoPanel extends Component {
                 </div>
                 <form id="chatForm" className="textInput" onSubmit={this.sendChat}>
                     <div className="fixed-right">
-                        <button type="submit" className="actionBtn">
-                        Send--></button>
+                        <button type="submit" id="chatSubmitBtn" className="inlineBtn">
+                            Send--></button>
                     </div>
                     <div className="expand-left">
                         <input type="text" name="chat" className="noborder chatinput"></input>
