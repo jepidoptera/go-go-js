@@ -19,6 +19,8 @@
     top: 0;
     right: 0;
     filter: invert(100);
+    z-index: 99;
+    overflow: hidden;
 }
 
 #boardContainer.offline {
@@ -31,6 +33,5 @@
     #boardContainer {
         top: auto;
         bottom: 0;
-        margin: auto auto;
     }
 }

@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import "./infoPanel.css";
+import api from '../../js/api';
 
 class InfoPanel extends Component {
     state = {
@@ -13,6 +14,16 @@ class InfoPanel extends Component {
     hideMenu = () => {
         // definitely close the menu
         this.setState({ menuOpen: false });
+    }
+    sendChat = (event) => {
+        event.preventDefault();
+        let chat = event.target.chat.value;
+        console.log("chat submitted:", chat);
+        api.sendChat(this.props.game.id, chat, this.props.localPlayer.username, this.props.localPlayer.authtoken, (res) => {
+            console.log("chat server responds: ", res);
+        });
+        // chat = "";
+        event.target.form.reset();
     }
     render() {
         return (<div id="infoPanel">
@@ -53,15 +64,18 @@ class InfoPanel extends Component {
             <div id="chatPanel">
                 <div id="chatHistory" className="outline">
                     {/* chat text goes here */}
+                    {this.props.game.chatHistory
+                        ? this.props.game.chatHistory.map((chat, i) => <p key={i}>{chat}</p>)
+                        : null}
                     <br></br>
                 </div>
-                <form id="chatForm" className="textInput">
+                <form id="chatForm" className="textInput" onSubmit={this.sendChat}>
                     <div className="fixed-right">
-                        <button type="submit" className="actionBtn" style={{ "right": "0" }}>
+                        <button type="submit" className="actionBtn">
                         Send--></button>
                     </div>
                     <div className="expand-left">
-                        <input type="text" name="text" className="noborder chatinput"></input>
+                        <input type="text" name="chat" className="noborder chatinput"></input>
                     </div>
                 </form>
             </div>

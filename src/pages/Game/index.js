@@ -31,7 +31,8 @@ class Game extends Component {
     state = {
         game: { Id: 0 },
         online: false,
-        opponent: {}
+        opponent: {},
+        gameRefreshInterval: () => { }
     }
 
     componentWillMount() {
@@ -65,7 +66,19 @@ class Game extends Component {
                         return;
                     }
                     console.log("loaded game: ", game);
-                    this.setState({ game: { ...game, online: true } }, this.startGame);
+                    this.setState({
+                        game: { ...game, online: true },
+                        gameRefreshInterval: setInterval(() => {
+                            // refresh the game twice a second or so
+                            // is this ok? probably. it's like 2k/second tops
+                            // I'll find a more efficient solution later
+                            api.loadGame(query.gameId, (game) => {
+                                console.log("chat ping");
+                                this.setState({ game: { ...game, online: true } });
+                            })
+                        }, 500)
+                    }, this.startGame);
+
                 })
             })
         }
@@ -287,10 +300,12 @@ class Game extends Component {
         // unload non-react components
         localPlayer.unload()
         HexaSphere.deconstruct();
+        // unload ping interval
+        clearInterval(this.state.gameRefreshInterval);
     }
 
     render() {
-        console.log("rendering game page");
+        // console.log("rendering game page");
         return (
             <div id='gameCanvas'>
                 {

@@ -50,12 +50,6 @@ export default {
             let nodelocations = hexaSphere.nodes.map(node => node.position);
             let hexes = 0;
             for (let i = 0; i < geometry.vertices.length; i++) {
-                // keep track of an index for each one... might be useful later
-                // geometry.vertices[i].index = i;
-                // if (geometry.vertices[i].neighbors.length === 2) {
-                //     geometry.vertices[i].isHex = true;
-                //     pentagons.push(geometry.vertices[i]);
-                // }
                 // an ineficient way to find which verticies are also nodes...
                 // the correct thing to do would be to include a flag on the vertex in the json file
                 // todo: flag node vertices in the json file

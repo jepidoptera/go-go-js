@@ -59,7 +59,6 @@ const HexaSphere = {
         // mouse click raycaster
         var canvas = renderer.domElement;
         canvas.setAttribute("id", "3dcanvas");
-        let canvasPosition = $(canvas).position();
         let rayCaster = new THREE.Raycaster();
         let mousePosition = new THREE.Vector2();
         let nearestNode = this.nodes[0];
@@ -135,11 +134,16 @@ const HexaSphere = {
                 // nope. this is because we're waiting for other player online.
                 return;
             }
-            else // go ahead with the move
+            else { /* go ahead with the move */ }
 
             // find where we have clicked within the canvas
-            mousePosition.x = ((event.clientX - canvasPosition.left) / canvas.width) * 2 - 1;
-            mousePosition.y = -((event.clientY - canvasPosition.top) / canvas.height) * 2 + 1;
+            let board = $("#boardContainer");
+            let offset = board.offset();
+            let width = board.width();
+            let height = board.height();
+            // bring it into the range of +/-0.5
+            mousePosition.x = ((event.pageX - offset.left) / width) * 2 - 1;
+            mousePosition.y = -((event.pageY - offset.top) / height) * 2 - 1;
 
             // find the intersection point with the main game object
             rayCaster.setFromCamera(mousePosition, this.camera);
@@ -297,8 +301,9 @@ const HexaSphere = {
                 HexaSphere.scene.remove(HexaSphere.scene.children[i]);
             }
             // remove the canvas element
-            document.getElementById("boardContainer")
-                .removeChild(document.getElementById("3dcanvas"));
+            if (document.getElementById("3dcanvas"))
+                document.getElementById("boardContainer")
+                    .removeChild(document.getElementById("3dcanvas"));
         }
     }
 };

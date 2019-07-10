@@ -113,6 +113,19 @@ export default {
             errCallback(err);
         })
     },
+    sendChat: function (gameID, text, username, authtoken, callback) {
+        $.ajax({
+            url: this.url + "/games/chat/" + gameID,
+            data: { username: username, authtoken: authtoken, text: text },
+            method: "POST"
+        }).done(data => {
+            // send the data to the callback
+            // in this case, this will be the opponent's move
+            callback(data);
+        }).fail(err => {
+            console.log("error posting chat: ", err);
+        })
+    },
     gameState: function (gameID, callback) {
         $.get(this.url + "/games/state/" + gameID)
             .done(data => {

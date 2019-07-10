@@ -1,5 +1,6 @@
 html {
-	filter: invert(100%);
+    filter: invert(100%);
+    overflow: hidden;
 }
 
 body {
