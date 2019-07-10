@@ -1,14 +1,12 @@
 import "./game.css";
-import React, { PureComponent } from 'react';
-// import THREE from "../../js/three.js";
-// import HexaBoard from "../../components/3D Board";
+import React, { Component } from 'react';
 import StandardBoard from "../../components/Standard Board";
 import api from "../../js/api";
-import ScorePanel from "../../components/ScorePanel";
+import InfoPanel from "../../components/InfoPanel";
 import HexaSphere from "../../components/3D Board";
 import localPlayer from "../../components/LocalPlayer";
 import go from "../../js/go";
-import { resolve } from "path";
+// import { resolve } from "path";
 
 function parseQuery(url) {
     let queryStart = url.indexOf("?") + 1;
@@ -29,7 +27,7 @@ function parseQuery(url) {
     return returnval;
 }
 
-class Game extends PureComponent {
+class Game extends Component {
     state = {
         game: { Id: 0 },
         online: false,
@@ -126,7 +124,7 @@ class Game extends PureComponent {
             api.loadPlayer(opponent, data => {
                 // store as state.opponent
                 this.setState({ opponent: 
-                    {... data, 
+                    {...data, 
                         color: (opponent === this.state.game.white 
                         ? go.stone.white : go.stone.black)} 
                     });
@@ -182,7 +180,16 @@ class Game extends PureComponent {
             // if on hexasphere
             HexaSphere.isTurn = localPlayer.isTurn;
             // update
-            this.forceUpdate();
+            // this.forceUpdate();
+            this.setState({
+                game: {
+                    ...this.state.game,
+                    currentPlayer: (go.turn === go.stone.black
+                        ? localPlayer.username
+                        : this.state.opponent.username
+                    )
+                }
+            });
         }
         // online game
         else {
@@ -190,10 +197,12 @@ class Game extends PureComponent {
             // we must wait for the other player to play
             localPlayer.isTurn = false;
             HexaSphere.isTurn = false;
-            console.log("other player's turn.");
+            this.setState({ game: { ...this.state.game, currentPlayer: this.state.opponent.username } });
+            console.log(this.state.game.currentPlayer + "'s turn.");
             // update (don't let them play out of turn!)
             // since this is a pureComponent we have to update even to change props
-            this.forceUpdate();
+            // nevermind, changed that
+            // this.forceUpdate();
 
             let x = parseInt(location / 256);
             let y = parseInt(location % 256);
@@ -230,7 +239,7 @@ class Game extends PureComponent {
                         else if (this.state.game.gameMode === 2 && opcode !== go.Opcodes.pass) {
                             // mark hex board while it's still the correct turn
                             HexaSphere.addStone(this.state.opponent.color, location);
-                            // rotate to face the new move
+                            // rotate to show the latest move
                             HexaSphere.rotateTowards(HexaSphere.nodes[location].position);
                         }
                         go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
@@ -241,12 +250,13 @@ class Game extends PureComponent {
                             HexaSphere.captureStones(go.capturedStones);
                         }
 
-                        // return control
+                        // re"turn" control
                         localPlayer.isTurn = true;
                         HexaSphere.isTurn = true;
-                        console.log(localPlayer.username + "'s turn.");
+                        this.setState({ game: { ...this.state.game, currentPlayer: localPlayer.username } });
+                        console.log(this.state.game.currentPlayer + "'s turn.");
                         // update again
-                        this.forceUpdate();
+                        // this.forceUpdate();
 
                         // compare state
                         // any deviation means we have a problem
@@ -257,6 +267,14 @@ class Game extends PureComponent {
                     else {
                         // this should never happen (sanity check)
                         console.log("sanity check failed: got invalid response from server. ", res);
+                    }
+                },
+                err => {
+                    // probably a bad gateway response...
+                    console.log("server returned error: ", err);
+                    // try to ping again
+                    if (!ping) {
+                        this.move(-1);
                     }
                 }
             );
@@ -273,17 +291,18 @@ class Game extends PureComponent {
     render() {
         console.log("rendering game page");
         return (
-            <div id='gameCanvas'>
-                <ScorePanel player={localPlayer} local={this.state.game.online} turn={go.turn===localPlayer.color}/>
-                {this.state.loaded
-                    ?(this.state.game.gameMode === 0
-                        ? <StandardBoard {...this.state.game} go={go} isTurn={localPlayer.isTurn} playFunction={this.move}/>
-                        // hexaboard is not going to be a react component.
-                        // it is just better that way.
-                            : null)
-                    : (<div>game not loaded</div>)
-                }
-                <ScorePanel player={this.state.opponent} turn={go.turn===this.state.opponent.color} />
+            <div id='GameComponent'>
+                <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game}/>
+                <div id='gameCanvas'>
+                    {this.state.loaded
+                        ?(this.state.game.gameMode === 0
+                            ? <StandardBoard {...this.state.game} go={go} isTurn={localPlayer.isTurn} playFunction={this.move}/>
+                            // hexaboard is not going to be a react component.
+                            // it is just better that way.
+                                : null)
+                        : (<div>game not loaded</div>)
+                        }
+                </div>
             </div>
         )
     }

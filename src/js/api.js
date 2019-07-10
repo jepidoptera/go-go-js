@@ -99,7 +99,7 @@ export default {
             console.log("error deleting game: ", err);
         })
     },
-    makeMove: function (gameID, x, y, color, username, authtoken, callback) {
+    makeMove: function (gameID, x, y, color, username, authtoken, callback, errCallback) {
         $.ajax({
             url: this.url + "/games/move/" + gameID,
             data: {username: username, authtoken: authtoken, x: x, y: y, opcode: color},
@@ -110,6 +110,7 @@ export default {
             callback(data);
         }).fail(err => {
             console.log("error posting move: ", err);
+            errCallback(err);
         })
     },
     gameState: function (gameID, callback) {
