@@ -6,15 +6,28 @@ class InfoPanel extends Component {
     state = {
         menuOpen: false
     }
+
+    componentDidMount() {
+        // we want to see the end of the chat, not the beginning
+        this.scrollToBottom();
+    }
+
+    componentDidUpdate() {
+        // keep it scrolled down
+        this.scrollToBottom();
+    }
+
     showMenu = (event) => {
         // open or close the menu
         this.setState({ menuOpen: !this.state.menuOpen });
         event.stopPropagation();
     }
+
     hideMenu = () => {
         // definitely close the menu
         this.setState({ menuOpen: false });
     }
+
     sendChat = (event) => {
         event.preventDefault();
         let chat = event.target.chat.value;
@@ -23,8 +36,13 @@ class InfoPanel extends Component {
             console.log("chat server responds: ", res);
         });
         // chat = "";
-        event.target.form.reset();
+        event.target.chat.value = "";
     }
+
+    scrollToBottom = () => {
+        this.messagesEnd.scrollIntoView({ behavior: "smooth" });
+    }
+
     render() {
         return (<div id="infoPanel">
             {/* this invisible thing will pop up while the menu is open so that
@@ -67,7 +85,9 @@ class InfoPanel extends Component {
                     {this.props.game.chatHistory
                         ? this.props.game.chatHistory.map((chat, i) => <p key={i}>{chat}</p>)
                         : null}
-                    <br></br>
+                    <div style={{ float: "left", clear: "both" }}
+                        ref={(el) => { this.messagesEnd = el; }}>
+                    </div>
                 </div>
                 <form id="chatForm" className="textInput" onSubmit={this.sendChat}>
                     <div className="fixed-right">

@@ -47,6 +47,7 @@
 #chatHistory {
     margin: 10px;
     flex: 1;
+    overflow: scroll;
 }
 .chatinput {
     width: 100%;

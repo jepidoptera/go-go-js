@@ -73,7 +73,6 @@ class Game extends Component {
                             // is this ok? probably. it's like 2k/second tops
                             // I'll find a more efficient solution later
                             api.loadGame(query.gameId, (game) => {
-                                console.log("chat ping");
                                 this.setState({ game: { ...game, online: true } });
                             })
                         }, 500)
