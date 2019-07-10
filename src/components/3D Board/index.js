@@ -216,9 +216,6 @@ const HexaSphere = {
                     tempStone.location = -1;
                     // play a permanent stone
                     this.moveFunction(nearestNode.index);
-                    // point to face it
-                    this.rotateTowards(clickedAt);
-
                 }
             }
         }
@@ -255,6 +252,8 @@ const HexaSphere = {
         // save a reference in the board
         this.nodes[location].object = permStone;
         // console.log("nodes are now: ", this.go.board.nodes);
+        // rotate so the new stone faces the camera
+        // this.rotateTowards(this.nodes[location].position);
     },
 
     captureStones: function (stones) {
