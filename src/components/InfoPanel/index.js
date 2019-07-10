@@ -2,19 +2,43 @@ import React, {Component} from 'react';
 import "./infoPanel.css";
 
 class InfoPanel extends Component {
+    state = {
+        menuOpen: false
+    }
+    showMenu = (event) => {
+        // open or close the menu
+        this.setState({ menuOpen: !this.state.menuOpen });
+        event.stopPropagation();
+    }
+    hideMenu = () => {
+        // definitely close the menu
+        this.setState({ menuOpen: false });
+    }
     render() {
         return (<div id="infoPanel">
+            {/* this invisible thing will pop up while the menu is open so that
+            if you click away from the menu, it will close.  Hides otherwise. */}
+            <div className={"clickCatcher " + (this.state.menuOpen ? "show" : "hide")}
+                onClick={this.hideMenu}>
+            </div>
             <span id="localPlayerName">
                 Playing as {this.props.localPlayer.username}
-                <button className="inlineBtn">
-                    ≡
-                </button>
+                {this.props.game.online
+                    ? <button className="inlineBtn" onClick={this.showMenu}>
+                        ≡
+                    </button>
+                    : null
+                }
             </span>
+            <div className={"menu " + (this.state.menuOpen ? "show" : "hide")}>
+                <button onClick={backToLobby} className="inlineBtn menuItem">return to lobby</button>
+                <br></br>
+                <button onClick={logOut} className="inlineBtn menuItem">log out</button>
+            </div>
             <br></br>
             <span id="gameInfo">
                 {this.props.game.description} vs {this.props.opponent.username}
             </span>
-            <br></br>
             <span id="turnIndicator" className={
                 this.props.localPlayer.isTurn
                     // invert (black on white) when it's local player's turn
@@ -44,6 +68,16 @@ class InfoPanel extends Component {
         </div>
         );
     }
+}
+
+function backToLobby() {
+    // return to game lobby
+    window.location.href = "/game/lobby"
+}
+
+function logOut() {
+    // return to game lobby
+    window.location.href = "/"
 }
 
 export default InfoPanel;

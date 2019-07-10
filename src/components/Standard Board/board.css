@@ -1,27 +1,7 @@
-#boardContainer {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    transform: translate(0%, -50%);
-    height: 100vmin;
-    width: 100vmin;
-    overflow: hidden;
-    margin: 0 auto;
-}
 
 #boardImg {
-    position: relative;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-}
-
-@media screen and (orientation:portrait) {
-    #boardContainer {
-        top: auto;
-        bottom: 0;
-        left: 50%;
-        transform: translate(-50%, 0%);
-        margin: auto auto;
-    }
 }

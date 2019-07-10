@@ -1,28 +1,29 @@
 #infoPanel {
-    position: absolute;
-    display: block;
-    height: 100%;
+    height: 100vh;
     width: 100%;
     max-width: Calc(100vmax - 100vmin);
     top: 0;
     left: 0;
     background-color: white;
-    z-index: 99;
+    z-index: 9;
     display: flex;
     flex-direction: column;
+    position: absolute;
+    clear: both;
 }
 
 #localPlayerName {
     display: block;
     width: 100%;
     font-size: 16pt;
+    position: relative;
 }
-
 
 #gameInfo {
     display: block;
     width: 100%;
     font-size: 12pt;
+    position: relative;
 }
 
 #turnIndicator {
@@ -33,6 +34,7 @@
     display: inline-block;
     margin: 0 auto;
     width: max-content;
+    position: relative;
 }
 
 #chatPanel {
@@ -49,7 +51,10 @@
     padding: 4px;
     border-bottom: 1px solid black;
 }
-.chatinput:focus {
+.inlineBtn {
+    z-index: -1;
+}
+button:focus {
     outline:0;
 }
 .expand-left {
@@ -58,6 +63,36 @@
 }
 .fixed-right {
     float:right;
+}
+.menu {
+    box-sizing: border-box;
+    display: none;
+    position: absolute;
+    z-index: 10;
+    top: 20pt;
+    width: Calc(100% - 20px);
+    background-color: white;
+    height: 80px;
+    border: 1px solid black;
+    padding: 10px;
+    margin: 10px;
+}
+
+.menuItem {
+    width: 50%;
+}
+
+.show {
+    display: block;
+}
+.hide {
+    display: none;
+}
+
+.clickCatcher {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
 }
 
 @media screen and (orientation:portrait) {

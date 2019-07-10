@@ -11,22 +11,26 @@ class Board extends Component {
     }
 
     componentDidMount() {
-        // copy of this for use within the function
-
-        // board click event
+        // set up board click event
         $("#boardContainer").click((event) => {
             // can't move when it's not our turn
             if (!this.props.isTurn) return;
 
-            let board = document.getElementById('boardContainer');
             // calculate board index from mouse coordinates
-            var x = Math.floor((event.pageX - board.offsetLeft + board.offsetWidth / 2) / board.offsetWidth * this.props.go.board.size);
-            var y = Math.floor((event.pageY - board.offsetTop + board.offsetHeight / 2) / board.offsetHeight * this.props.go.board.size);
+            // jquery is good at this
+            let board = $("#boardContainer");
+            let offset = board.offset();
+            let width = board.width();
+            let height = board.height();
+            var x = Math.floor((event.pageX - offset.left) / width * this.props.go.board.size);
+            var y = Math.floor((event.pageY - offset.top) / height * this.props.go.board.size);
+
             // console.log("clicked at X: " + x + ", Y: " + y);
             let index = this.props.go.indexFromCoors(x, y);
             
             // is the temp stone already here?
             if (this.state.tempstone.location === index) {
+                // if yes, we've already checked the move and can play immediately
                 console.log("played stone at ", x, ", ", y);
                 // callback to Game component, which will call the go module for us
                 // and broadcast the move if we're online
@@ -84,7 +88,7 @@ class Board extends Component {
             "width": (100 * (19 / (this.props.go.board.size || 1))) + "%"
         }
         return (
-            <div id="boardContainer">
+            <div>
                 {/* board image */}
                 <img src={goboard} id="boardImg" style={boardSize} alt="game board"></img>
 

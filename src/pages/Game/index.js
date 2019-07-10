@@ -273,7 +273,8 @@ class Game extends Component {
                     // probably a bad gateway response...
                     console.log("server returned error: ", err);
                     // try to ping again
-                    if (!ping) {
+                    if (err.status === 502) {
+                        console.log("attempting to re-establish connection...")
                         this.move(-1);
                     }
                 }
@@ -291,12 +292,18 @@ class Game extends Component {
     render() {
         console.log("rendering game page");
         return (
-            <div id='GameComponent'>
-                <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game}/>
-                <div id='gameCanvas'>
+            <div id='gameCanvas'>
+                {
+                    this.state.game.online
+                    ? <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game} />
+                    : null
+                }
+                <div id="boardContainer" className={this.state.game.online ? "" : "offline"}>
                     {this.state.loaded
                         ?(this.state.game.gameMode === 0
-                            ? <StandardBoard {...this.state.game} go={go} isTurn={localPlayer.isTurn} playFunction={this.move}/>
+                            ? <StandardBoard {...this.state.game} go={go}
+                                isTurn={localPlayer.isTurn} playFunction={this.move}
+                                online={this.state.game.online}/>
                             // hexaboard is not going to be a react component.
                             // it is just better that way.
                                 : null)

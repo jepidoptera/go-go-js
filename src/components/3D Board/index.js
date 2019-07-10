@@ -44,15 +44,17 @@ const HexaSphere = {
         // but doesn't become permanent until you click again
         var tempStone = {location: -1};
 
+        let domWidth = $("#boardContainer").width();
+        let domHeight = $("#boardContainer").height();
         // set up camera
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+        this.camera = new THREE.PerspectiveCamera(75, domWidth / domHeight, 0.1, 2000);
         this.camera.position.z = 1000;
 
         // renderer
         var renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(domWidth, domHeight);
         renderer.setClearColor(0x008F8F, 0);
-        document.getElementById("gameCanvas").appendChild(renderer.domElement);
+        document.getElementById("boardContainer").appendChild(renderer.domElement);
 
         // mouse click raycaster
         var canvas = renderer.domElement;
@@ -295,7 +297,7 @@ const HexaSphere = {
                 HexaSphere.scene.remove(HexaSphere.scene.children[i]);
             }
             // remove the canvas element
-            document.getElementById("gameCanvas")
+            document.getElementById("boardContainer")
                 .removeChild(document.getElementById("3dcanvas"));
         }
     }
