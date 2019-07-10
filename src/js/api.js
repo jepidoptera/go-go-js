@@ -130,7 +130,7 @@ export default {
         $.get(this.url + "/games/state/" + gameID)
             .done(data => {
                 // return it as an array of ints
-                callback(data.split(",").map(node => parseInt(node)));
+                callback(data);
             }).fail(err => console.log("error fetching game state: ", err));
     },
     loadPlayer: function (username, callback) {
