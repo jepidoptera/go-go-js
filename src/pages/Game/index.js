@@ -310,7 +310,7 @@ class Game extends Component {
                 {
                     this.state.game.online
                     ? <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game} />
-                    : null
+                    : <button onClick={() => exitToHome(this.state.game.history.length)}>home page</button>
                 }
                 <div id="boardContainer" className={this.state.game.online ? "" : "offline"}>
                     {this.state.loaded
@@ -329,4 +329,11 @@ class Game extends Component {
     }
 }
 
+function exitToHome(gameStarted) {
+    // check if they're ok with abandoning a game in progress
+    if (!gameStarted || window.confirm("Exit this game? It will not be saved.")) {
+        // go back to home page
+        window.location.href = "/";
+    }
+} 
 export default Game;

@@ -9,6 +9,7 @@ import Game from "./pages/Game";
 import Login from './pages/Login';
 import GameOptions from './pages/GameOptions';
 import GameLobby from './pages/GameLobby';
+import Register from './pages/Register';
 
 const Crapp = function() {
         return ( <Router>
@@ -17,7 +18,8 @@ const Crapp = function() {
             <Route exact path="/gameoptions/offline" render={() => <GameOptions />} />
             <Route exact path="/gameoptions/online" render={() =>
                 <GameOptions online={true} />} />
-            <Route exact path="/game/lobby" render={() => <GameLobby/>} />
+            <Route exact path="/game/lobby" render={() => <GameLobby />} />
+            <Route exact path="/register" component={Register} />
         </Router>
         )
 }
