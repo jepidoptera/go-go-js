@@ -64,16 +64,3 @@ td, th {
     font-weight: 600;
     border-bottom: 1px solid white;
 }
-
-.gameActionBtn {
-    color: blue;
-}
-
-.inlineBtn {
-    margin-left: 20px;
-    margin-right: 20px;
-}
-
-.noborder {
-    border: 0;
-}

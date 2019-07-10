@@ -168,7 +168,7 @@ class GameLobby extends Component {
                                 ? (<tr>
                                     <td>
                                         <button
-                                            className="gameActionBtn"
+                                            className="actionBtn"
                                             onClick={() => this.createGame()}>
                                             Start a Game
                                         </button>
@@ -197,10 +197,10 @@ class GameLobby extends Component {
                             return (
                                 <tr key={i}>
                                     {this.state.selectedTab !== "challenge"
-                                        ? (<td><button className="gameActionBtn" onClick={() => this.joinGame(game.Id)}>Join</button></td>)
+                                        ? (<td><button className="actionBtn" onClick={() => this.joinGame(game.Id)}>Join</button></td>)
                                         : (<td>
-                                             <button className="gameActionBtn" onClick={() => this.joinGame(game.Id)}>Accept</button>
-                                            <button className="gameActionBtn" onClick={() => this.dismissGame(game.Id)}>Dismiss</button>
+                                             <button className="actionBtn" onClick={() => this.joinGame(game.Id)}>Accept</button>
+                                            <button className="actionBtn" onClick={() => this.dismissGame(game.Id)}>Dismiss</button>
                                         </td>)
                                     }
                                     {/* for an ongoing game, show whichever player is not you */}

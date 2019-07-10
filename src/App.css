@@ -6,7 +6,40 @@ body {
   text-align: center;
   overflow: hidden;
   background-color: black;
+  user-select: none;
 }
+
+/* style classes to use throughout the app */
+
+.inlineBtn {
+    margin-left: 20px;
+    margin-right: 20px;
+    font-size: 12pt;
+    border-radius: 3px;
+    color: gray;
+}
+
+.actionBtn {
+    color: blue;
+    border-radius: 3px;
+    font-size: 10pt;
+}
+
+.invert {
+    filter: invert(100%);
+}
+
+.outline {
+    border: 2px solid black;
+}
+
+.noborder {
+    border: 0;
+}
+
+/* original stuff from react template that I saved because I thought it was interesting
+and wanted to refer back to it later.  Thanks to this example for the disappearing stone
+animation in 2d mode. */
 
 .App-logo {
   animation: App-logo-spin infinite 20s linear;
