@@ -55,16 +55,15 @@ const HexaSphere = {
         renderer.setSize(domWidth, domHeight);
         renderer.setClearColor(0x008F8F, 0);
         document.getElementById("boardContainer").appendChild(renderer.domElement);
-        document.getElementById("boardCon")
 
         $(window).resize(() => {
                 // reset elements on size change
                 let domWidth = $("#boardContainer").width();
                 let domHeight = $("#boardContainer").height();
+                // change camera aspect ratio
                 this.camera.aspect = domWidth / domHeight;
                 this.camera.updateProjectionMatrix();
                 renderer.setSize(domWidth, domHeight);
-                // change camera aspect ratio too
             })
 
         // mouse click raycaster
