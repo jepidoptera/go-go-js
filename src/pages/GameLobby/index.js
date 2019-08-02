@@ -13,30 +13,45 @@ class GameLobby extends Component {
         allgames: [],
         games: [],
         selectedTab: "ongoing",
-        loadGameInterval: null
+        loadGameInterval: null,
+        ongoingFilter: (game) =>
+            ((game.white === localPlayer.username || game.black === localPlayer.username)
+                && game.history.length > 0),
+        openFilter: (game) =>
+            (game.black === "" && game.white !== localPlayer.username),
+        challengeFilter: (game) =>
+            (game.black === localPlayer.username && game.history.length === 0)
     }
 
     componentDidMount() {
         // we should call localPlayer.load() at the beginning of every pages that uses it
         // also remember to call localPlayer.unload() on componentWillUnmount()
         localPlayer.load(() => {
-            // localPlayer.authorize(data => {
-            //     if (!data.valid) {
-            //         console.log("auth failed: ", data);
-            //         alert("you have been logged out.");
-            //         // booted back to the home page.
-            //         this.props.history.push("/");
-            //     }
-            // })
             // load games
-            this.loadGames(() => this.setTab("open"));
+            this.loadGames(() => {
+                let ongoingGames = this.state.allgames.reduce(
+                    (sum, game) =>
+                        // count all ongoing games
+                        sum + this.state.ongoingFilter(game) ? 1 : 0)
+                let challengeGames = this.state.allgames.reduce(
+                    (sum, game) =>
+                        // count all direct challenge games
+                        sum + this.state.challengeFilter(game) ? 1 : 0)
+                // select tab in this priority:
+                // challenge games first, if there are any.
+                // if not, then ongoing games, if there are any.
+                // if not, fall back to open games
+                this.setTab(challengeGames ? "challenge"
+                    : (ongoingGames
+                    ? "ongoing" : "open"))
+            });
             // check for new games once every ten seconds.
             // save a reference to the interval so we can clear it when the user leaves the page.
             this.setState({
                 loadGameInterval:
                     setInterval(() => {
                         this.loadGames(() => this.setTab(this.state.selectedTab));
-                    }, 10000)
+                    }, 1000)
             })
         })
     }
@@ -73,25 +88,18 @@ class GameLobby extends Component {
         switch (tabname) {
             case ("ongoing"): {
                 // find games which this player is involved in, and which have already started
-                games = games.filter((game) => 
-                    ((game.white === localPlayer.username || game.black === localPlayer.username) &&
-                        game.history.length > 0)
-                )
+                games = games.filter(this.state.ongoingFilter)
                 break;
             }
             case ("open"): {
                 // find games which have no player2
-                games = games.filter((game) => 
-                    (game.black === "" && game.white !== localPlayer.username)
-                )
+                games = games.filter(this.state.openFilter)
                 break;
             }
             case ("challenge"): {
                 // find games which have no history, but player2 == local player
                 console.log("finding challenges for: ", localPlayer.username);
-                games = games.filter((game) => 
-                    (game.black === localPlayer.username && game.history.length === 0)
-                )
+                games = games.filter(this.state.challengeFilter)
                 break;
             }
             default: break;
@@ -155,9 +163,11 @@ class GameLobby extends Component {
                 </div>
                 <table id="gamesTable">
                     <tbody>
+                        {/* headers: game type, opponent, game history */}
                         <tr className="noborder">
                             <th></th>
                             <th>Opponent</th>
+                            <th>Status</th>
                             <th>Game Type</th>
                         </tr>
                         {/* horizontal line */}
@@ -165,6 +175,8 @@ class GameLobby extends Component {
 
                         {
                             this.state.selectedTab === "challenge"
+                // in challenge mode, the first row
+                // is a menu for creating a new challenge game
                                 ? (<tr>
                                     <td>
                                         <button
@@ -189,6 +201,8 @@ class GameLobby extends Component {
                                     </td>
                                     </tr>
                                 )
+
+                                // in other tabs, don't show that part
                                 : null
                         }
 
@@ -205,6 +219,11 @@ class GameLobby extends Component {
                                     }
                                     {/* for an ongoing game, show whichever player is not you */}
                                     <td>{(game.white !== localPlayer.username ? game.white : game.black)}</td>
+                                    <td>{
+                                        this.state.selectedTab !== "challenge"
+                                            ? `move: ${game.history.length / 3 - 1}`
+                                            : "gauntlet thrown."
+                                    }</td>
                                     <td>{game.description}</td>
                                     {/* <td>{game.online ? "yes" : "no"}</td> */}
                                 </tr>
