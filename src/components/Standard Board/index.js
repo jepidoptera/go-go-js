@@ -1,18 +1,22 @@
 import React, { Component } from 'react';
 import "./board.css";
 import goboard from "./goboard.png";
-import Stone from "../../components/Stone";
+import Stone from "../Stone";
 
 var $ = require("jquery");
 
 class Board extends Component {
     state = {
-        tempstone: { location: -1 }
+        tempstone: { location: -1 },
+        contextMenu: false
     }
 
     componentDidMount() {
         // set up board click event
         $("#boardContainer").click((event) => {
+            // close right-click menu if you click anywhere else
+            this.setState({contextMenu: false});
+
             // can't move when it's not our turn
             if (!this.props.isTurn) return;
 
@@ -48,7 +52,7 @@ class Board extends Component {
                 this.forceUpdate();
             }
             else { console.log("you can't go there.") } //failed
-        });
+        })
     }
 
     goStone(stone, style) {
@@ -65,7 +69,10 @@ class Board extends Component {
             let props = {
                 x: x + "%",
                 y: y + "%",
-                size: 90 / this.props.go.board.size,
+                size: (this.style !== "marker" 
+                    ? 90 / this.props.go.board.size 
+                    // 'marker' image is smaller
+                    : 45 / this.props.go.board.size),
                 key: stone.location,
                 color: ["black", "white"][stone.color]
             }
@@ -74,6 +81,8 @@ class Board extends Component {
                 return (<Stone {...props} captured={true} />)
             else if (style === "temp")
                 return (<Stone {...props} temp={true}/>)
+            else if (style === "marker")
+                return (<Stone {...props} marker={true}/>)
             else // default
                 return (<Stone {...props} />)
         }
@@ -102,6 +111,16 @@ class Board extends Component {
                 {this.goStone(this.state.tempstone, "temp")}
 
                 {/* scoring overlay */}
+                {this.props.scoringOverlay ? 
+                    this.props.go.Score().blackTerritory.map(node => 
+                        this.goStone({color: this.props.go.stone.black, location: node}, "marker")
+                    )
+                : null}
+                {this.props.scoringOverlay ? 
+                    this.props.go.Score().whiteTerritory.map(node => 
+                        this.goStone({color: this.props.go.stone.white, location: node}, "marker")
+                    )
+                : null}
             </div>
         )
     }

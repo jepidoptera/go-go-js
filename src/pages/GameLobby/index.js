@@ -221,7 +221,11 @@ class GameLobby extends Component {
                                     <td>{(game.white !== localPlayer.username ? game.white : game.black)}</td>
                                     <td>{
                                         this.state.selectedTab !== "challenge"
-                                            ? `move: ${game.history.length / 3 - 1}`
+                                            ? (
+                                                this.state.selectedTab === "ongoing"
+                                                ? `move ${game.history.length / 3 - 1} - ${game.currentPlayer}'s turn.`
+                                                : "waiting for opponent."
+                                            )
                                             : "gauntlet thrown."
                                     }</td>
                                     <td>{game.description}</td>

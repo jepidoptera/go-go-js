@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import WhiteStone from './white stone.png'
 import BlackStone from './black stone.png'
+import WhiteMarker from './white_triangle.png'
+import BlackMarker from './black_triangle.png'
 import "./stone.css";
 
 class Stone extends Component {
@@ -36,11 +38,11 @@ class Stone extends Component {
                 
                 {this.props.color === "white"
                     // white stone
-                    ? <img className="stoneImg" src={WhiteStone} alt="white stone" ></img >
+                    ? <img className="stoneImg" src={!this.props.marker ? WhiteStone : WhiteMarker} alt="white stone" ></img >
                     : (
                         this.props.color === "black"
                             // black stone
-                            ? < img className="stoneImg" src={BlackStone} alt="black stone" ></img >
+                            ? < img className="stoneImg" src={!this.props.marker ? BlackStone : BlackMarker} alt="black stone" ></img >
                             // no stone here
                             : null
                     )}

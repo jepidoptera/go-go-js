@@ -1,0 +1,26 @@
+.scorePanel {
+    position: absolute;
+    display: block;
+    height: 100%;
+    width: Calc(50vw - 50vh);
+    max-width: 400px;
+    color: white;
+}
+
+.black {
+    left: 0;
+}
+.black::after {
+    content: "(black)";
+}
+
+.white {
+    right: 0;
+}
+.white::after {
+    content: "(white)";
+}
+
+.outline {
+    border: 1px solid white;
+}

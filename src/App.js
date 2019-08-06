@@ -11,7 +11,7 @@ import GameOptions from './pages/GameOptions';
 import GameLobby from './pages/GameLobby';
 import Register from './pages/Register';
 
-const Crapp = function() {
+const App = function() {
         return ( <Router>
             <Route exact path="/" render={() => <Login />} />
             <Route exact path="/game" component={Game} />
@@ -24,4 +24,4 @@ const Crapp = function() {
         )
 }
 
-export default Crapp;
+export default App;

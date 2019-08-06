@@ -1,0 +1,15 @@
+.contextMenu{
+    border: 1px solid black;
+    background-color: white;
+    position: absolute;
+    width: 200px;
+    z-index: 99;
+    cursor: pointer;
+    user-select: none
+}
+.menuItem {
+    width: 100%;
+}
+.menuItem:hover {
+    background-color: orange;
+}

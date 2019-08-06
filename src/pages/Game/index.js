@@ -5,6 +5,8 @@ import api from "../../js/api";
 import InfoPanel from "../../components/InfoPanel";
 import HexaSphere from "../../components/3D Board";
 import localPlayer from "../../components/LocalPlayer";
+import ContextMenu from "../../components/ContextMenu";
+
 import go from "../../js/go";
 // import { resolve } from "path";
 
@@ -32,7 +34,8 @@ class Game extends Component {
         game: { Id: 0 },
         online: false,
         opponent: {},
-        gameRefreshInterval: () => { }
+        contextMenu: false,
+        scoringOverlay: false
     }
 
     componentWillMount() {
@@ -191,8 +194,7 @@ class Game extends Component {
             localPlayer.isTurn = true;
             // if on hexasphere
             HexaSphere.isTurn = localPlayer.isTurn;
-            // update
-            // this.forceUpdate();
+            // change whose turn it is
             this.setState({
                 game: {
                     ...this.state.game,
@@ -211,11 +213,8 @@ class Game extends Component {
             HexaSphere.isTurn = false;
             this.setState({ game: { ...this.state.game, currentPlayer: this.state.opponent.username } });
             console.log(this.state.game.currentPlayer + "'s turn.");
-            // update (don't let them play out of turn!)
-            // since this is a pureComponent we have to update even to change props
-            // nevermind, changed that
-            // this.forceUpdate();
 
+            // format data for broadcasting
             let x = parseInt(location / 256);
             let y = parseInt(location % 256);
 
@@ -225,10 +224,10 @@ class Game extends Component {
             console.log("broadcasting move: ", x, y, ping || pass || localPlayer.color);
             // call the api
             api.makeMove(
-                this.state.game.id, x, y, ping || localPlayer.color, 
+                this.state.game.id, x, y, ping || pass || localPlayer.color, 
                 localPlayer.username, localPlayer.authtoken,
+                // and get the callback
                 res => {
-
                     // an interesting setup here...
                     // the server sends no response until the opponent plays.
                     // that response will return here, even hours later (since there's no timeout)
@@ -254,7 +253,12 @@ class Game extends Component {
                             // rotate to show the latest move
                             HexaSphere.rotateTowards(HexaSphere.nodes[location].position);
                         }
-                        go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
+                        if (opcode !== go.Opcodes.pass)
+                            // place a stone where opponent played
+                            go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
+                        else
+                            // opponent chose to pass
+                            go.PassTurn();
 
                         // were any stones captured?
                         if (this.state.game.gameMode === 2 && go.capturedStones.length > 0) {
@@ -262,13 +266,11 @@ class Game extends Component {
                             HexaSphere.captureStones(go.capturedStones);
                         }
 
-                        // re"turn" control
+                        // re"turn" control to local
                         localPlayer.isTurn = true;
                         HexaSphere.isTurn = true;
                         this.setState({ game: { ...this.state.game, currentPlayer: localPlayer.username } });
                         console.log(this.state.game.currentPlayer + "'s turn.");
-                        // update again
-                        // this.forceUpdate();
 
                         // compare state
                         // any deviation means we have a problem
@@ -283,6 +285,7 @@ class Game extends Component {
                 },
                 err => {
                     // probably a bad gateway response...
+                    // randomly happens sometimes
                     console.log("server returned error: ", err);
                     // try to ping again
                     if (err.status === 502) {
@@ -295,24 +298,56 @@ class Game extends Component {
 
     }
 
+    contextMenu = (event) => {
+        event.preventDefault();
+        // right-click menu to cha nge view
+        this.setState({contextMenu: {
+            x: event.pageX, 
+            y: event.pageY, 
+            scoringOverlay: this.state.game.scoringOverlay
+        }})
+    }
+
+    closeContextMenu = (event) => {
+        // if context menu is open, don't receive other click events until it's closed
+        if (this.state.contextMenu) {
+            event.stopPropagation();
+            // close the menu
+            this.setState({contextMenu: false})
+        }
+    }
+
+    onClickMenu = (index) => {
+        // when the context menu is clicked
+        console.log("context menu: ", index);
+        if (index === 0) {
+            // option 0: toggle scoring overlay
+            this.setState({game: {
+                ...this.state.game, 
+                scoringOverlay: (this.state.game.scoringOverlay ? false : true)
+            }});
+        }
+    }
+
     componentWillUnmount() {
         // unload non-react components
         localPlayer.unload()
         HexaSphere.deconstruct();
-        // unload ping interval
-        clearInterval(this.state.gameRefreshInterval);
     }
 
     render() {
         // console.log("rendering game page");
         return (
-            <div id='gameCanvas'>
+            // gameCanvas contains all of everything, including the info panel
+            <div id='gameCanvas' onClick={this.closeContextMenu}>
                 {
+                    // infoPanel shows game menu, chat, and whose turn it is
                     this.state.game.online
                     ? <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game} />
                     : <button onClick={() => exitToHome(this.state.game.history.length)}>home page</button>
                 }
-                <div id="boardContainer" className={this.state.game.online ? "" : "offline"}>
+                { /* boardContainer just contains the board */}
+                <div id="boardContainer" onContextMenu={this.contextMenu} className={this.state.game.online ? "" : "offline"}>
                     {this.state.loaded
                         ?(this.state.game.gameMode === 0
                             ? <StandardBoard {...this.state.game} go={go}
@@ -324,6 +359,11 @@ class Game extends Component {
                         : (<div>game not loaded</div>)
                         }
                 </div>
+                {/* show the context menu if it's open */}
+                {this.state.contextMenu
+                    ? <ContextMenu {...this.state.contextMenu} onClick={this.onClickMenu}></ContextMenu>
+                    : null
+                }
             </div>
         )
     }
