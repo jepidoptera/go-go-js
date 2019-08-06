@@ -2,6 +2,9 @@ var go = {
     board: {},
     passTurns: 0,
     turn: 0,
+    turnsPlayed: 0,
+    lastTurnScored: 0,
+    computedScore: {},
     stone: { empty: -1, black: 0, white: 1 },
     playOffline: false,
     capturedStones: [],
@@ -228,11 +231,13 @@ var go = {
     {
         // switch turns
         this.turn = (this.turn === this.stone.white) ? this.stone.black : this.stone.white;
+        // remember how many have been played
+        this.turnsPlayed++;
         return true;
     },
 
     GameOver : function () {
-
+        // TODO
     },
 
     // create a list of points which contain stones which would be captured 
@@ -318,6 +323,10 @@ var go = {
 
     Score: function ()
     {
+        // have we already computed the score this turn?
+        if (this.lastTurnScored === this.turnsPlayed) return this.computedScore;
+        // if not, we must calculate again
+        this.lastTurnScored = this.turnsPlayed;
         // find the score between two players on the given board
         let territory = [[], []];
         // total stones on the board for each side
@@ -400,7 +409,7 @@ var go = {
             }
         }
 
-        return {
+        this.computedScore = {
             // empty regions surrounded by a majority of one color
             blackTerritory: territory[this.stone.black],
             whiteTerritory: territory[this.stone.white],
@@ -411,6 +420,7 @@ var go = {
             deadWhiteStones: deadStones[this.stone.white],
             deadBlackstones: deadStones[this.stone.black],
         };
+        return this.computedScore;
     },
 
     playThrough(history) {

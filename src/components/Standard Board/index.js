@@ -100,6 +100,8 @@ class Board extends Component {
                 
                 {/* temp stone */}
                 {this.goStone(this.state.tempstone, "temp")}
+
+                {/* scoring overlay */}
             </div>
         )
     }
