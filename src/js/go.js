@@ -439,41 +439,41 @@ var go = {
         }
         // associate each group with the other groups that it borders
 
-        var nodeControl = [];
-        var nodeControlMask = [];
+        let nodeControl = [];
+        let nodeControlMask = [];
         // let each stone 'radiate' control seven times
         for (let i = 0; i < 7; i++) {            
             // for each node on the board...
             for (let n = 0; n < nodes.length; n++) {
                 // if there is an actual stone here
-                if (node[n].stone !== this.nullStone) {
+                if (nodes[n].stone !== this.nullStone) {
                     // generate control force
-                    nodeControl[n] = (nodeContol[n] || 0) +
-                        node[n].stone.color === this.stone.black
+                    nodeControl[n] = (nodeControl[n] || 0) +
+                        nodes[n].stone.color === this.stone.black
                             ? 8 // positive for black
                             : -8 // negative for white
                 }
                 if (Math.abs(nodeControl[n]) >= 8) {
                     // a buildup of force here...
                     // dissipate
-                    nodeControl[n] -= 4 * Math.sign(nodeContol[n]);
-                    node[n].neighbors.forEach(neighbor => {
+                    nodeControl[n] -= 4 * Math.sign(nodeControl[n]);
+                    nodes[n].neighbors.forEach(neighbor => {
                         // radiate only into empty space (actual stones block)
-                        if (node[neighbor].stone === this.nullStone) {
-                            nodeControlMask[neighbor] += Math.sign(nodeContol[n]);
+                        if (nodes[neighbor].stone === this.nullStone) {
+                            nodeControlMask[neighbor] += Math.sign(nodeControl[n]);
                         }
                     });
                 }
             }
             // add mask to control array
             for (let n = 0; n < nodes.length; n++) {
-                nodeContol[n] += nodeControlMask[n];
+                nodeControl[n] += nodeControlMask[n];
                 nodeControlMask[n] = 0;
             }
         }
 
-        return nodeContol;
-        
+        return nodeControl;
+
         // determine if those groups are live or not
         // console.log(groups);
 
