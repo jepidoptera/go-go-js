@@ -12,16 +12,21 @@ class GameLobby extends Component {
         localPlayer: {},
         allgames: [],
         games: [],
+        challengeGames: 0,
         selectedTab: "ongoing",
-        loadGameInterval: null,
-        ongoingFilter: (game) =>
-            ((game.white === localPlayer.username || game.black === localPlayer.username)
-                && game.history.length > 0),
-        openFilter: (game) =>
-            (game.black === "" && game.white !== localPlayer.username),
-        challengeFilter: (game) =>
-            (game.black === localPlayer.username && game.history.length === 0)
+        loadGameInterval: null
     }
+
+    // filtering different types of games
+    ongoingFilter = (game) =>
+        (game.white === localPlayer.username || game.black === localPlayer.username)
+            && game.history.length > 0
+    // anyone can join an open game
+    openFilter = (game) =>
+        (game.black === "" && game.white !== localPlayer.username)
+    // a challenge is issued directly to this player and already has their name filled in
+    challengeFilter = (game) =>
+        (game.black === localPlayer.username && game.history.length === 0)
 
     componentDidMount() {
         // we should call localPlayer.load() at the beginning of every pages that uses it
@@ -29,14 +34,10 @@ class GameLobby extends Component {
         localPlayer.load(() => {
             // load games
             this.loadGames(() => {
-                let ongoingGames = this.state.allgames.reduce(
-                    (sum, game) =>
-                        // count all ongoing games
-                        sum + this.state.ongoingFilter(game) ? 1 : 0)
-                let challengeGames = this.state.allgames.reduce(
-                    (sum, game) =>
-                        // count all direct challenge games
-                        sum + this.state.challengeFilter(game) ? 1 : 0)
+                // count all ongoing games
+                let ongoingGames = this.state.allgames.filter(this.ongoingFilter).length;
+                // count all direct challenge games
+                let challengeGames = this.state.allgames.filter(this.challengeFilter).length;
                 // select tab in this priority:
                 // challenge games first, if there are any.
                 // if not, then ongoing games, if there are any.
@@ -88,22 +89,24 @@ class GameLobby extends Component {
         switch (tabname) {
             case ("ongoing"): {
                 // find games which this player is involved in, and which have already started
-                games = games.filter(this.state.ongoingFilter)
+                games = games.filter(this.ongoingFilter)
                 break;
             }
             case ("open"): {
                 // find games which have no player2
-                games = games.filter(this.state.openFilter)
+                games = games.filter(this.openFilter)
                 break;
             }
             case ("challenge"): {
                 // find games which have no history, but player2 == local player
                 console.log("finding challenges for: ", localPlayer.username);
-                games = games.filter(this.state.challengeFilter)
+                games = games.filter(this.challengeFilter)
                 break;
             }
             default: break;
         }
+        // challenge games get their own special little icon
+        this.setState({ challengeGames: this.state.allgames.filter(this.challengeFilter).length })
         this.setState({ games: games, selectedTab: tabname });
     }
 
@@ -159,7 +162,14 @@ class GameLobby extends Component {
                     <button className={"tabButton" + (this.state.selectedTab === "open" ? " selected" : "")}
                         onClick={() => this.setTab("open")} id="Open">Open</button>
                     <button className={"tabButton" + (this.state.selectedTab === "challenge" ? " selected" : "")}
-                        onClick={() => this.setTab("challenge")} id="Challenge">Challenge</button>
+                        onClick={() => this.setTab("challenge")} id="Challenge">
+                            Challenge
+                            {
+                                this.state.challengeGames > 0
+                                ? <span className="challengeIcon">{this.state.challengeGames}</span>
+                                : ''
+                            }
+                        </button>
                 </div>
                 <table id="gamesTable">
                     <tbody>

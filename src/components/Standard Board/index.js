@@ -41,6 +41,8 @@ class Board extends Component {
                 this.props.playFunction(index);
                 // update board image
                 this.forceUpdate();
+                // try the experimental scoring function
+                this.props.go.experimentalScore()
             }
             // else, test the legality of this move
             else if (this.props.go.TryPlayStone(index, this.props.go.turn)) {
@@ -55,7 +57,7 @@ class Board extends Component {
         })
     }
 
-    goStone(stone, style) {
+    goStone(stone, style, size = 1) {
         // only draw stones which have a color
         if ([this.props.go.stone.black, this.props.go.stone.white].includes(stone.color)) {
             // get x/y coordinates
@@ -69,10 +71,10 @@ class Board extends Component {
             let props = {
                 x: x + "%",
                 y: y + "%",
-                size: (this.style !== "marker" 
+                size: (style !== "marker" 
                     ? 90 / this.props.go.board.size 
                     // 'marker' image is smaller
-                    : 45 / this.props.go.board.size),
+                    : 50 / this.props.go.board.size) * size,
                 key: stone.location,
                 color: ["black", "white"][stone.color]
             }
@@ -110,6 +112,12 @@ class Board extends Component {
                 {/* temp stone */}
                 {this.goStone(this.state.tempstone, "temp")}
 
+                {/* experimental scoring overlay */}
+                {/* {this.props.scoringOverlay ? 
+                    this.props.go.experimentalScore().map(node => {
+                        this.stone()
+                    })
+                : null} */}
                 {/* scoring overlay */}
                 {this.props.scoringOverlay ? 
                     this.props.go.Score().blackTerritory.map(node => 

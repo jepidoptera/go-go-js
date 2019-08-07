@@ -73,10 +73,10 @@ class Game extends Component {
                         game: { ...game, online: true },
                         gameRefreshInterval: setInterval(() => {
                             // refresh the game twice a second or so
-                            // is this ok? probably. it's like 2k/second tops
+                            // is this ok? probably. it's like 2kb/second tops
                             // I'll find a more efficient solution later
                             api.loadGame(query.gameId, (game) => {
-                                this.setState({ game: { ...game, online: true } });
+                                this.setState({ game: { ...this.state.game, ...game, online: true } });
                             })
                         }, 500)
                     }, this.startGame);
@@ -364,6 +364,7 @@ class Game extends Component {
                     ? <ContextMenu {...this.state.contextMenu} onClick={this.onClickMenu}></ContextMenu>
                     : null
                 }
+                {this.state.game.scoringOverlay}
             </div>
         )
     }

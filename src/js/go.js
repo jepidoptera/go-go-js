@@ -282,9 +282,9 @@ var go = {
         return captiveGroup;
     },
 
-    GroupAlike : function (start)
+    GroupAlike (start, nodes = this.board.nodes)
     {
-        let groupColor = this.board.nodes[start].stone.color;
+        let groupColor = nodes[start].stone.color;
         let group = [];
         let neighbors = [];
         // start search from the given point
@@ -294,11 +294,11 @@ var go = {
         while (searching.length > 0) {
             for (let i = 0; i < searching.length; i++)
             {
-                for (let j = 0; j < this.board.nodes[searching[i]].neighbors.length; j++)
+                for (let j = 0; j < nodes[searching[i]].neighbors.length; j++)
                 {
                     // look at neighboring grid points to see if they match the given type (black, white, or empty)
-                    let index = this.board.nodes[searching[i]].neighbors[j];
-                    if (this.board.nodes[index].stone.color === groupColor) {
+                    let index = nodes[searching[i]].neighbors[j];
+                    if (nodes[index].stone.color === groupColor) {
                         // same color, add it to group and search from there next
                         if (!group.includes(index) && !searching.includes(index) && !newSearches.includes(index)) {
                             newSearches.push(index);
@@ -321,7 +321,7 @@ var go = {
         return { group: group, neighbors: neighbors };
     },
 
-    Score: function ()
+    Score ()
     {
         // have we already computed the score this turn?
         if (this.lastTurnScored === this.turnsPlayed) return this.computedScore;
@@ -334,30 +334,34 @@ var go = {
         let liveStones = [[], []];
         // stones which are surrounded by enemy territory and are considered dead
         let deadStones = [[], []];
+        // so that we're not constantly altering this.board.nodes
+        // (which would cause a component refresh with each change)
+        // keep this temp array instead
+        let owner = [];
 
         for (let i = 0; i < this.board.nodes.length; i++)
         {
             // scan the whole board for empty nodes that haven't been scored yet
-            if (this.board.nodes[i].owner !== undefined) {
+            if (owner[i] === undefined) {
                 // found an unscored node. is it empty?
-                if (!this.board.nodes[i].stone.color) {
+                if (this.board.nodes[i].stone === this.nullStone) {
                     // empty, uncounted space
                     // let us decide who it belongs to
                     let score = [0, 0];
                     let { group, neighbors } = this.GroupAlike(i);
                     let contestedTerritory = group;
                     // count white vs. black stones surrounding the territory
-                    for (let n in neighbors) {
+                    neighbors.forEach(n => {
                         score[this.board.nodes[n].stone.color]++;
-                    }
+                    })
                     // are there more black stones or white stones bordering this territory?
                     // this is kinda crude, but should suffice in most (all?) circumstances
                     let winner = score.indexOf(Math.max(...score));
                     territory[winner] = territory[winner].concat(contestedTerritory);
                     // mark the whole region as scored
-                    for (let n in contestedTerritory) {
-                        this.board.nodes[n].owner = winner;
-                    }
+                    contestedTerritory.forEach(n => {
+                        owner[n] = winner;
+                    })
                 }
                 else { 
                     // we don't yet assign owners to nodes containing stones.
@@ -370,30 +374,24 @@ var go = {
         // capture stones which find themselves surrounded by enemy territory
         for (let i = 0; i < this.board.nodes.length; i++)
         {
-            if (this.board.nodes[i].owner === undefined) {
+            if (owner[i] === undefined) {
                 // a group of stones which hasn't been processed yet
-                let safe = false;
                 let groupColor = this.board.nodes[i].stone.color;
                 let opponent = (groupColor === this.stone.black) ? this.stone.white : this.stone.black;
                 let {group, neighbors} = this.GroupAlike(i);
                 // does this group border on any friendly territory?
-                for (let p in neighbors)
-                {
-                    if (this.board.nodes[p].owner === groupColor) {
-                        // found some friendly territory.
-                        // even if it's just one node, the group is alive
-                        safe = true;
-                        break;
-                    }
-                }
+                let safe = neighbors.reduce((safety, n) =>
+                    // even if it's just one node, the group is alive
+                    safety || (owner[n] === groupColor), 
+                false)
 
                 if (safe) {
                     // mark the whole group as alive
                     liveStones[groupColor] = liveStones[groupColor].concat(group);
                     // score the nodes they occupy as their own
-                    for (let p in group) {
-                        this.board.nodes[p].owner = groupColor;
-                    }
+                    group.forEach(n => {
+                        owner[n] = groupColor;
+                    })
                 }
 
                 else {
@@ -402,9 +400,9 @@ var go = {
                     // since these nodes are empty now, add territory for opponent
                     territory[opponent] = territory[opponent].concat(group);
                     // opponent owns all these nodes
-                    for (let p in group) {
-                        this.board.nodes[p].owner = opponent;
-                    }
+                    group.forEach(n => {
+                        owner[n] = opponent;
+                    })
                 }
             }
         }
@@ -421,6 +419,64 @@ var go = {
             deadBlackstones: deadStones[this.stone.black],
         };
         return this.computedScore;
+    },
+
+    experimentalScore(nodes = this.board.nodes) {
+        // first, find all groups. assign size, neighbors (other groups) and owner
+        let groupOwner = [];
+        let groups = [];
+        for (let n = 0; n < nodes.length; n++) {
+            if (groupOwner[n] === undefined) {
+                // group this node with others that share a color 
+                let {group, neighbors} = this.GroupAlike(n, nodes);
+                for (let i = 0; i < group.length; i++) {
+                    // assign each node in 'group' to this group index
+                    groupOwner[group[i]] = groups.length;
+                }
+                // create a group object
+                groups.push({ members: group, neighborNodes: neighbors });
+            }
+        }
+        // associate each group with the other groups that it borders
+
+        var nodeControl = [];
+        var nodeControlMask = [];
+        // let each stone 'radiate' control seven times
+        for (let i = 0; i < 7; i++) {            
+            // for each node on the board...
+            for (let n = 0; n < nodes.length; n++) {
+                // if there is an actual stone here
+                if (node[n].stone !== this.nullStone) {
+                    // generate control force
+                    nodeControl[n] = (nodeContol[n] || 0) +
+                        node[n].stone.color === this.stone.black
+                            ? 8 // positive for black
+                            : -8 // negative for white
+                }
+                if (Math.abs(nodeControl[n]) >= 8) {
+                    // a buildup of force here...
+                    // dissipate
+                    nodeControl[n] -= 4 * Math.sign(nodeContol[n]);
+                    node[n].neighbors.forEach(neighbor => {
+                        // radiate only into empty space (actual stones block)
+                        if (node[neighbor].stone === this.nullStone) {
+                            nodeControlMask[neighbor] += Math.sign(nodeContol[n]);
+                        }
+                    });
+                }
+            }
+            // add mask to control array
+            for (let n = 0; n < nodes.length; n++) {
+                nodeContol[n] += nodeControlMask[n];
+                nodeControlMask[n] = 0;
+            }
+        }
+
+        return nodeContol;
+        
+        // determine if those groups are live or not
+        // console.log(groups);
+
     },
 
     playThrough(history) {

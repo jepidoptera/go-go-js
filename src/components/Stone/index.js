@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import WhiteStone from './white stone.png'
 import BlackStone from './black stone.png'
-import WhiteMarker from './white_triangle.png'
-import BlackMarker from './black_triangle.png'
+import WhiteMarker from './white square.png'
+import BlackMarker from './black square.png'
 import "./stone.css";
 
 class Stone extends Component {
