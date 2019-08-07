@@ -113,13 +113,27 @@ class Board extends Component {
                 {this.goStone(this.state.tempstone, "temp")}
 
                 {/* experimental scoring overlay */}
-                {/* {this.props.scoringOverlay ? 
-                    this.props.go.experimentalScore().map(node => {
-                        this.stone()
-                    })
-                : null} */}
-                {/* scoring overlay */}
                 {this.props.scoringOverlay ? 
+                    this.props.go.experimentalScore(
+                        this.props.go.board.nodes.map((node, i) => 
+                            // drop the tempstone in there so you can see the potential effects of that play
+                            (i === this.state.tempstone.location 
+                            ? { stone: this.state.tempstone, neighbors: node.neighbors }
+                            : node)
+                        )
+                    ).map((node, i) =>
+                        (node ? this.goStone(
+                            { 
+                                color: (node > 0 ? this.props.go.stone.black : this.props.go.stone.white),
+                                location: i
+                            },
+                            "marker",
+                            Math.min(4, Math.abs(node)) / 4
+                        ) : null)
+                    )
+                : null}
+                {/* scoring overlay */}
+                {/* {this.props.scoringOverlay ? 
                     this.props.go.Score().blackTerritory.map(node => 
                         this.goStone({color: this.props.go.stone.black, location: node}, "marker")
                     )
@@ -128,7 +142,7 @@ class Board extends Component {
                     this.props.go.Score().whiteTerritory.map(node => 
                         this.goStone({color: this.props.go.stone.white, location: node}, "marker")
                     )
-                : null}
+                : null} */}
             </div>
         )
     }
