@@ -423,44 +423,93 @@ var go = {
 
     experimentalScore(nodes = this.board.nodes) {
         // first, find all groups. assign size, neighbors (other groups) and owner
-        let groupOwner = [];
-        let groups = [];
+        let groupOf = []; // maps nodes to groups
+        let groups = []; // each group is an array of node indices
         for (let n = 0; n < nodes.length; n++) {
-            if (groupOwner[n] === undefined) {
+            if (groupOf[n] === undefined) {
                 // group this node with others that share a color 
                 let {group, neighbors} = this.GroupAlike(n, nodes);
+                let owner = nodes[group[0]].stone.color;
+                // assign each node in 'group' to this group index
                 for (let i = 0; i < group.length; i++) {
-                    // assign each node in 'group' to this group index
-                    groupOwner[group[i]] = groups.length;
+                    groupOf[group[i]] = groups.length;
                 }
                 // create a group object
-                groups.push({ members: group, neighborNodes: neighbors });
+                groups.push({ members: group, neighborNodes: neighbors, owner: owner, eyes: 0, associates: [] });
             }
         }
         // associate each group with the other groups that it borders
+        for (let n = 0; n < groups.length; n++) {
+            groups[n].neighborGroups = []
+            for (let i = 0; i < groups[n].neighborNodes; i++) {
+                let neighborGroup = groups[groupOf[groups[n].neighborNodes[i]]];
+                if (!groups[n].neighborGroups.includes(neighborGroup)) {
+                    // found a new one
+                    groups[n].neighborGroups.push(neighborGroup);
+                }
+            }
+        }
+
+        // process empty groups
+        for (let n = 0; n < groups.length; n++) {
+            // find groups which exist, but are empty
+            if (!groups[n]) continue
+            // of those, find the ones which are 'eyes' (i.e., have only one neighbor group)
+            else if (groups[n].owner === this.nullStone.color) {
+                // empty group
+                if (groups[n].neighborGroups.length === 1) {
+                    // this group has an eye
+                    groups[groups[n].neighborGroups[0]].eyes += 1;
+                }
+                // semi-edge case, if two non-neighboring groups are the same color and share two eyes,
+                // they can be considered as one safe "supergroup"
+                else if (groups[n].neighborGroups.length === 2) {
+                    // if they have already been associated, it's because they also share another eye
+                    if (groups[n].neighborGroups[0].associates.includes(groups[n].neighborGroups[1])) {
+                        // are they the same color?
+                        if (groups[n].neighborGroups[0].owner === groups[n].neighborGroups[1].owner) {
+                            // combine the two
+                            groups[n].neighborGroups[0].members = 
+                                groups[n].neighborGroups[0].members.concat(groups[n].neighborGroups[1].members);
+                            groups[n].neighborGroups[0].eyes += 2 + groups[n].neighborGroups[1].eyes;
+                            // get rid of the second one after it's been absorbed
+                            groups[n].neighborGroups[1] = null
+                        }
+                    }
+                }
+            }
+        }
+
+        // let's see what we've got
+        console.log("board separated into: ", groups);
+
+        // groups without eyes may die if they're surrounded
+        // so an empty ground that borders only an eyeless group,
+        // and one other group of the opposite color, 
+        // means that territory all belongs to the surrounding group
 
         let nodeControl = [];
         let nodeControlMask = [];
         // let each stone 'radiate' control seven times
-        for (let i = 0; i < 16; i++) {            
+        for (let i = 0; i < 5; i++) {            
             // for each node on the board...
             for (let n = 0; n < nodes.length; n++) {
                 // if there is an actual stone here
                 if (nodes[n].stone !== this.nullStone) {
                     // generate control force
-                    nodeControl[n] = (nodeControl[n] || 0) +
+                    nodeControl[n] = 
                         (nodes[n].stone.color === this.stone.black
-                            ? 8 // positive for black
-                            : -8) // negative for white
+                            ? 5 // positive for black
+                            : -5) // negative for white
                 }
-                while (Math.abs(nodeControl[n]) >= 8) {
-                    // a buildup of force here...
-                    // dissipate
-                    nodeControl[n] -= 4 * Math.sign(nodeControl[n]);
+                if (nodeControl[n]) {
                     nodes[n].neighbors.forEach(neighbor => {
                         // radiate only into empty space (actual stones block)
                         if (nodes[neighbor].stone === this.nullStone) {
-                            nodeControlMask[neighbor] = (nodeControlMask[neighbor] || 0) + Math.sign(nodeControl[n]);
+                            if (Math.abs(nodeControl[neighbor] + nodeControlMask[neighbor]) < Math.abs(nodeControl[n]) - 1
+                                || Math.sign(nodeControl[neighbor] + nodeControlMask[neighbor]) != Math.sign(nodeControl[n])) {
+                                    nodeControlMask[neighbor] = (nodeControlMask[neighbor] || 0) + Math.sign(nodeControl[n]);
+                                }
                         }
                     });
                 }
@@ -473,6 +522,24 @@ var go = {
                 }
             }
         }
+
+        // debug display
+        console.log("control array:");
+        let displayString = '';
+        for (let n =0; n < nodes.length; n++) {
+            let nodeString = ''; 
+            if (nodeControl[n]) nodeString += nodeControl[n].toString();
+            else nodeString = '0';
+            nodeString = ' '.repeat(4 - nodeString.length) + nodeString;
+            displayString += nodeString;
+            if (n % this.board.size === this.board.size - 1) {
+                console.log(displayString);
+                displayString = '';
+            }
+        }
+
+        // parse out actual stones from the scoreboard
+
 
         return nodeControl;
 

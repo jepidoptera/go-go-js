@@ -90,8 +90,8 @@ class InfoPanel extends Component {
             <div id="chatPanel" className="outline" >
                 <div id="chatHistory" onClick={this.chatFocus}>
                     {/* chat text goes here */}
-                    {this.props.game.chatHistory
-                        ? this.props.game.chatHistory.map((chat, i) => <p key={i}>{chat}</p>)
+                    {this.props.chatHistory
+                        ? this.props.chatHistory.map((chat, i) => <p key={i}>{chat}</p>)
                         : null}
                     <div style={{ float: "left", clear: "both" }}
                         ref={(el) => { this.messagesEnd = el; }}>

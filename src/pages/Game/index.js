@@ -32,6 +32,7 @@ function parseQuery(url) {
 class Game extends Component {
     state = {
         game: { Id: 0 },
+        chat: [],
         online: false,
         opponent: {},
         contextMenu: false,
@@ -76,7 +77,7 @@ class Game extends Component {
                             // is this ok? probably. it's like 2kb/second tops
                             // I'll find a more efficient solution later
                             api.loadGame(query.gameId, (game) => {
-                                this.setState({ game: { ...this.state.game, ...game, online: true } });
+                                this.setState({ chat:  game.chatHistory });
                             })
                         }, 500)
                     }, this.startGame);
@@ -343,7 +344,7 @@ class Game extends Component {
                 {
                     // infoPanel shows game menu, chat, and whose turn it is
                     this.state.game.online
-                    ? <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game} />
+                    ? <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game} chatHistory={this.state.chat}/>
                     : <button onClick={() => exitToHome(this.state.game.history.length)}>home page</button>
                 }
                 { /* boardContainer just contains the board */}

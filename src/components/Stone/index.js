@@ -1,11 +1,11 @@
-import React, {Component} from 'react';
+import React, {PureComponent} from 'react';
 import WhiteStone from './white stone.png'
 import BlackStone from './black stone.png'
 import WhiteMarker from './white square.png'
 import BlackMarker from './black square.png'
 import "./stone.css";
 
-class Stone extends Component {
+class Stone extends PureComponent {
 
 
     constructor(props) {

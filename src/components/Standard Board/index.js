@@ -1,11 +1,11 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import "./board.css";
 import goboard from "./goboard.png";
 import Stone from "../Stone";
 
 var $ = require("jquery");
 
-class Board extends Component {
+class Board extends PureComponent {
     state = {
         tempstone: { location: -1 },
         contextMenu: false
@@ -42,7 +42,7 @@ class Board extends Component {
                 // update board image
                 this.forceUpdate();
                 // try the experimental scoring function
-                this.props.go.experimentalScore()
+                // this.props.go.experimentalScore()
             }
             // else, test the legality of this move
             else if (this.props.go.TryPlayStone(index, this.props.go.turn)) {
@@ -51,7 +51,7 @@ class Board extends Component {
                 // but you can still change your mind
                 this.setState({ tempstone: new this.props.go.Stone(this.props.go.turn, index) })
                 // console.log("board is now:", this.props.go.board);
-                this.forceUpdate();
+                // this.forceUpdate();
             }
             else { console.log("you can't go there.") } //failed
         })
@@ -71,10 +71,7 @@ class Board extends Component {
             let props = {
                 x: x + "%",
                 y: y + "%",
-                size: (style !== "marker" 
-                    ? 90 / this.props.go.board.size 
-                    // 'marker' image is smaller
-                    : 50 / this.props.go.board.size) * size,
+                size: 90 / this.props.go.board.size * size,
                 key: stone.location,
                 color: ["black", "white"][stone.color]
             }
@@ -90,6 +87,33 @@ class Board extends Component {
         }
         // if color == -1, render nothing
         else return null;
+    }
+
+    scoringOverlay() {
+        return (
+            this.props.go.experimentalScore(
+                // copying the board with map(), while adding in the tempstone
+                this.props.go.board.nodes.map((node, i) => (
+                    i === this.state.tempstone.location 
+                        // drop the tempstone in there so you can see the potential effects of that play
+                        ? { stone: this.state.tempstone,  
+                            neighbors: node.neighbors }
+                        // and also drop in all the nodes on the actual board
+                        : node
+                    ))
+            ).map((score, i) =>
+            // map score to visuals
+                (score ? this.goStone(
+                    { 
+                        color: (score > 0 ? this.props.go.stone.black : this.props.go.stone.white),
+                        location: i
+                    },
+                    "marker",
+                    // size
+                    0.5 - 0.5 / 2 ** (Math.abs(score) - 2)
+                ) : null)
+            )
+        )
     }
 
     render() {
@@ -113,25 +137,8 @@ class Board extends Component {
                 {this.goStone(this.state.tempstone, "temp")}
 
                 {/* experimental scoring overlay */}
-                {this.props.scoringOverlay ? 
-                    this.props.go.experimentalScore(
-                        this.props.go.board.nodes.map((node, i) => 
-                            // drop the tempstone in there so you can see the potential effects of that play
-                            (i === this.state.tempstone.location 
-                            ? { stone: this.state.tempstone, neighbors: node.neighbors }
-                            : node)
-                        )
-                    ).map((node, i) =>
-                        (node ? this.goStone(
-                            { 
-                                color: (node > 0 ? this.props.go.stone.black : this.props.go.stone.white),
-                                location: i
-                            },
-                            "marker",
-                            Math.min(4, Math.abs(node)) / 4
-                        ) : null)
-                    )
-                : null}
+                {this.props.scoringOverlay ? this.scoringOverlay() : null}
+                
                 {/* scoring overlay */}
                 {/* {this.props.scoringOverlay ? 
                     this.props.go.Score().blackTerritory.map(node => 
