@@ -1,14 +1,15 @@
-import React, { PureComponent } from 'react';
+import React, { Component } from 'react';
 import "./board.css";
 import goboard from "./goboard.png";
 import Stone from "../Stone";
 
 var $ = require("jquery");
 
-class Board extends PureComponent {
+class Board extends Component {
     state = {
         tempstone: { location: -1 },
-        contextMenu: false
+        contextMenu: false,
+        territoryMap: []
     }
 
     componentDidMount() {
@@ -40,17 +41,33 @@ class Board extends PureComponent {
                 // and broadcast the move if we're online
                 this.props.playFunction(index);
                 // update board image
-                this.forceUpdate();
-                // try the experimental scoring function
-                // this.props.go.experimentalScore()
+                // this.forceUpdate();
             }
             // else, test the legality of this move
             else if (this.props.go.TryPlayStone(index, this.props.go.turn)) {
                 // that must have worked
                 console.log("temp stone at: ", index);
-                // but you can still change your mind
-                this.setState({ tempstone: new this.props.go.Stone(this.props.go.turn, index) })
-                // console.log("board is now:", this.props.go.board);
+                // but you can still change your mind. just a temp stone.
+                let tempstone = new this.props.go.Stone(this.props.go.turn, index);
+                // HACK: refresh the territory map
+                this.setState({territoryMap: []}); // try deleting this line, I dare you
+                // then do it again proper
+                this.setState({ 
+                    // place the temp stone in state
+                    tempstone: tempstone,
+                    // map out the territory with the stone there
+                    territoryMap: this.props.ai.scoringOverlay(
+                        // copying the board with map(), while adding in the tempstone
+                        this.props.go.board.nodes.map((node, i) => (
+                            i === tempstone.location 
+                                // drop the tempstone in there so you can see the potential effects of that play
+                                ? { stone: tempstone,  
+                                    neighbors: node.neighbors }
+                                // and also drop in all the nodes on the actual board
+                                : node
+                        ))
+                    )
+                })
                 // this.forceUpdate();
             }
             else { console.log("you can't go there.") } //failed
@@ -91,27 +108,17 @@ class Board extends PureComponent {
 
     scoringOverlay() {
         return (
-            this.props.go.experimentalScore(
-                // copying the board with map(), while adding in the tempstone
-                this.props.go.board.nodes.map((node, i) => (
-                    i === this.state.tempstone.location 
-                        // drop the tempstone in there so you can see the potential effects of that play
-                        ? { stone: this.state.tempstone,  
-                            neighbors: node.neighbors }
-                        // and also drop in all the nodes on the actual board
-                        : node
-                    ))
-            ).map((score, i) =>
+            this.state.territoryMap.map((score, i) =>
             // map score to visuals
-                (score ? this.goStone(
+                this.goStone(
                     { 
                         color: (score > 0 ? this.props.go.stone.black : this.props.go.stone.white),
                         location: i
                     },
                     "marker",
                     // size
-                    0.5 - 0.5 / 2 ** (Math.abs(score) - 2)
-                ) : null)
+                    0.5 - 0.5 / 2 ** Math.abs(score || 0)
+                )
             )
         )
     }

@@ -71,6 +71,8 @@ class InfoPanel extends Component {
                 <button onClick={backToLobby} className="inlineBtn menuItem">return to lobby</button>
                 <br></br>
                 <button onClick={logOut} className="inlineBtn menuItem">log out</button>
+                <br></br>
+                <button onClick={nextGame} className="inlineBtn menuItem">log out</button>
             </div>
             <br></br>
             <span id="gameInfo">
@@ -120,6 +122,10 @@ function backToLobby() {
 function logOut() {
     // return to game lobby
     window.location.href = "/"
+}
+
+function nextGame() {
+    // find the next game where it it your turn
 }
 
 export default InfoPanel;

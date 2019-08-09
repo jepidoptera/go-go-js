@@ -6,7 +6,7 @@ import InfoPanel from "../../components/InfoPanel";
 import HexaSphere from "../../components/3D Board";
 import localPlayer from "../../components/LocalPlayer";
 import ContextMenu from "../../components/ContextMenu";
-
+import ai from "../../js/ai";
 import go from "../../js/go";
 // import { resolve } from "path";
 
@@ -94,7 +94,7 @@ class Game extends Component {
         // this will be called once the state is finished setting
         console.log("game parameters: ", this.state.game);
 
-                // set up board -- depends strongly on game type
+        // set up board -- depends on game type
 
         // standard flat board
         if (this.state.game.gameMode === 0) {
@@ -104,7 +104,7 @@ class Game extends Component {
             // load game history
             go.playThrough(this.state.game.history);
         }
-        // if hexasphere game
+        // hexasphere game
         else if (this.state.game.gameMode === 2) {
             console.log("starting hexasphere game...");
             // construct hexasphere!
@@ -120,6 +120,8 @@ class Game extends Component {
             console.log("unrecognized game mode:", this.state.game.gameMode);
         }
 
+        // load AI
+        ai.initialize(go);
 
         // for an online game, load players
         if (this.state.game.online) {
@@ -351,7 +353,7 @@ class Game extends Component {
                 <div id="boardContainer" onContextMenu={this.contextMenu} className={this.state.game.online ? "" : "offline"}>
                     {this.state.loaded
                         ?(this.state.game.gameMode === 0
-                            ? <StandardBoard {...this.state.game} go={go}
+                            ? <StandardBoard {...this.state.game} go={go} ai={ai}
                                 isTurn={localPlayer.isTurn} playFunction={this.move}
                                 online={this.state.game.online}/>
                             // hexaboard is not going to be a react component.
