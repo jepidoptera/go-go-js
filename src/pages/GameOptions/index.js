@@ -41,8 +41,9 @@ class GameOptions extends Component {
                     <br></br><br></br>
                     {/* if this is an online game, show the other players you can challenge */}
                     {this.props.online
-                        ? <OpponentList localPlayer={localPlayer.username}/>
-                        : null
+                        ? <OpponentList localPlayer={localPlayer.username} />
+                        // otherwise, give the option to play vs AI
+                        : <span><input type="checkbox" id="vsAI"></input>play vs computer</span>
                     }
                     <br></br><br></br>
                     <button type="submit" onClick={(event) => {
@@ -87,8 +88,10 @@ const startGame = (online) => {
         })
     }
     else {
+        let vsAI = $("#vsAI").is(':checked');
         // add game type and board size as query parameters
         newURL += "?boardType=" + boardType + "&boardSize=" + boardSize;
+        if (vsAI) newURL += "&AIplayer=true"
         window.location.href = (newURL);
     }
 }

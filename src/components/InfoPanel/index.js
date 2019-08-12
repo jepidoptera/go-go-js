@@ -41,6 +41,7 @@ class InfoPanel extends Component {
     }
 
     scrollToBottom = () => {
+        if (!this.props.online) return;
         this.messagesEnd.scrollIntoView({ behavior: "smooth" });
         let chatHistory = document.getElementById("chatHistory");
         chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -60,6 +61,7 @@ class InfoPanel extends Component {
             </div>
             <span id="localPlayerName">
                 Playing as {this.props.localPlayer.username}
+                <button className="inlineBtn" onClick={this.props.pass}>pass</button>
                 {this.props.game.online
                     ? <button className="inlineBtn" onClick={this.showMenu}>
                         ≡
@@ -89,26 +91,31 @@ class InfoPanel extends Component {
                     : this.props.game.currentPlayer + "'s "}
                 turn.
             </span>
-            <div id="chatPanel" className="outline" >
-                <div id="chatHistory" onClick={this.chatFocus}>
-                    {/* chat text goes here */}
-                    {this.props.chatHistory
-                        ? this.props.chatHistory.map((chat, i) => <p key={i}>{chat}</p>)
-                        : null}
-                    <div style={{ float: "left", clear: "both" }}
-                        ref={(el) => { this.messagesEnd = el; }}>
+            {this.props.showScore ?
+                <div> {this.props.currentScore} </div>
+            : null}
+            {this.props.online ?
+                <div id="chatPanel" className="outline" >
+                    <div id="chatHistory" onClick={this.chatFocus}>
+                        {/* chat text goes here */}
+                        {this.props.chatHistory
+                            ? this.props.chatHistory.map((chat, i) => <p key={i}>{chat}</p>)
+                            : null}
+                        <div style={{ float: "left", clear: "both" }}
+                            ref={(el) => { this.messagesEnd = el; }}>
+                        </div>
                     </div>
+                    <form id="chatForm" className="textInput" onSubmit={this.sendChat}>
+                        <div className="fixed-right">
+                            <button type="submit" id="chatSubmitBtn" className="inlineBtn">
+                                Send--></button>
+                        </div>
+                        <div className="expand-left">
+                            <input type="text" name="chat" className="noborder chatinput"></input>
+                        </div>
+                    </form>
                 </div>
-                <form id="chatForm" className="textInput" onSubmit={this.sendChat}>
-                    <div className="fixed-right">
-                        <button type="submit" id="chatSubmitBtn" className="inlineBtn">
-                            Send--></button>
-                    </div>
-                    <div className="expand-left">
-                        <input type="text" name="chat" className="noborder chatinput"></input>
-                    </div>
-                </form>
-            </div>
+            : null}
         </div>
         );
     }

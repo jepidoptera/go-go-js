@@ -1,4 +1,3 @@
-const ai = require('./ai');
 var go = {
     board: {},
     passTurns: 0,
@@ -102,55 +101,66 @@ var go = {
 
     /// returns true/false depending on whether "location" is a legal move for "color"
     /// but leaves the game state just as it was when finished.
-    TryPlayStone: function (location, opcode) {
+    TryPlayStone: function (location, opcode, nodes = this.board.nodes) {
         // non-playable opcodes
         if (opcode === this.Opcodes.pass || opcode === this.Opcodes.ping) return true;
 
         // otherwise, gotta play in turn
-        if (opcode !== this.turn) return false;
+        // if (opcode !== this.turn) return false;
+        let reason = '';
         
-        // only play on a square that isn't occupied
-        if ([this.stone.white, this.stone.black]
-            .includes(this.board.nodes[location].stone.color)) return false;
-
         // with those basic checks out of the way, let's see if this move is allowable
         let allowMove = true;
-        
+
         // we'll reset turn after this is done
         let originalTurn = this.turn;
+        let originalStone = nodes[location].stone;
 
-        // fill the grid point with a placeholder stone
-        this.board.nodes[location].stone = new this.Stone(this.turn, location);
-
-        // check for captures
-        let captures = this.Captures(location);
-
-        // applying ko rule here...
-        if (captures.length === 1 && captures[0] === this.koStone) {
-            // take it back
-            console.log("no go (ko)");
-            allowMove = false;
-        }
-
-        else if (captures.length > 0) {
-            // legal move. capturing is only even illegal in a ko situation
-        }
-
-        // check for self-captures.  In other words,
-        // if the stone that was just played would be captured where it stands,
-        // it isn't a legal move
-        else {
-            // we do this "capture" without adding any additional stones,
-            // so it returns a value only if the stone is already surrounded
-            if (this.NextTurn() &&
-                this.Captures(this.board.nodes[location].neighbors[0]).length > 0) {
-
+        // only play on a square that isn't occupied
+        if ([this.stone.white, this.stone.black]
+            .includes(nodes[location].stone.color)) {
                 allowMove = false;
+                reason = "already occupied."
+        }
+        else {
+            // fill the grid point with a placeholder stone
+            nodes[location].stone = new this.Stone(this.turn, location);
+
+            // check for captures
+            let captures = this.Captures(location, nodes);
+
+            // applying ko rule here...
+            if (captures.length === 1 && captures[0] === this.koStone) {
+                // no can do
+                allowMove = false;
+                reason = "no go (ko)";
+            }
+
+            else if (captures.length > 0) {
+                // legal move. capturing is only even illegal in a ko situation
+            }
+
+            // check for self-captures.  In other words,
+            // if the stone that was just played would be captured where it stands,
+            // it isn't a legal move
+            else {
+                // we do this "capture" without adding any additional stones,
+                // so it returns a value only if the stone is already surrounded
+                if (this.NextTurn() &&
+                    this.Captures(nodes[location].neighbors[0], nodes).length > 0) {
+                    
+                    allowMove = false;
+                    reason = "playing into captivity."
+                }
             }
         }
+        
         // undo all changes
-        this.board.nodes[location].stone = this.nullStone;
+        nodes[location].stone = originalStone;
         this.turn = originalTurn;
+        if (!allowMove && nodes === this.board.nodes) {
+            console.log(reason);
+        }
         // return result
         return allowMove;
     },
@@ -243,7 +253,7 @@ var go = {
 
     // create a list of points which contain stones which would be captured 
     // if current player moves at location
-    Captures : function (location)
+    Captures : function (location, nodes = this.board.nodes)
     {
         // this is much simpler than my original code...
         let captiveGroup = [];
@@ -251,24 +261,24 @@ var go = {
 
         // looking at each node adjacent to the starting location.
         // these are the initial set of locations at which a stone could be captured.
-        for (let i = 0; i < this.board.nodes[location].neighbors.length; i++) {
-            let n = this.board.nodes[location].neighbors[i];
+        for (let i = 0; i < nodes[location].neighbors.length; i++) {
+            let n = nodes[location].neighbors[i];
 
             // if there is a stone here, and it is of the opposite color,
             // and it is not already captured:
-            if ([this.stone.black, this.stone.white].includes(this.board.nodes[n].stone.color) &&
-                this.board.nodes[n].stone.color !== this.board.nodes[location].stone.color &&
+            if ([this.stone.black, this.stone.white].includes(nodes[n].stone.color) &&
+                nodes[n].stone.color !== nodes[location].stone.color &&
                 !captiveGroup.includes(n)) {
 
                 // find all stones of the same color which are connected to this one
-                let { group, neighbors } = this.GroupAlike(n);
+                let { group, neighbors } = this.GroupAlike(n, nodes);
 
                 breathingRoom = false;
                 // check each neighbor space adjacent to the enemy group.
                 // if vacant, the group is safe.
                 for (let j = 0; j < neighbors.length; j++) {
                     let e = neighbors[j];
-                    if (this.board.nodes[e].stone === this.nullStone) {
+                    if (nodes[e].stone === this.nullStone) {
                         breathingRoom = true;
                         break;
                     }

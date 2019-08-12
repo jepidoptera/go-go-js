@@ -39,9 +39,9 @@ class Board extends Component {
                 console.log("played stone at ", x, ", ", y);
                 // callback to Game component, which will call the go module for us
                 // and broadcast the move if we're online
-                this.props.playFunction(index);
-                // update board image
-                // this.forceUpdate();
+                this.props.move(index);
+                // remove temp stone
+                this.setState({ tempstone: { location: -1 } });
             }
             // else, test the legality of this move
             else if (this.props.go.TryPlayStone(index, this.props.go.turn)) {
@@ -49,26 +49,14 @@ class Board extends Component {
                 console.log("temp stone at: ", index);
                 // but you can still change your mind. just a temp stone.
                 let tempstone = new this.props.go.Stone(this.props.go.turn, index);
-                // HACK: refresh the territory map
-                this.setState({territoryMap: []}); // try deleting this line, I dare you
-                // then do it again proper
-                this.setState({ 
+                this.setState({
                     // place the temp stone in state
-                    tempstone: tempstone,
-                    // map out the territory with the stone there
-                    territoryMap: this.props.ai.scoringOverlay(
-                        // copying the board with map(), while adding in the tempstone
-                        this.props.go.board.nodes.map((node, i) => (
-                            i === tempstone.location 
-                                // drop the tempstone in there so you can see the potential effects of that play
-                                ? { stone: tempstone,  
-                                    neighbors: node.neighbors }
-                                // and also drop in all the nodes on the actual board
-                                : node
-                        ))
-                    )
+                    tempstone: tempstone
                 })
-                // this.forceUpdate();
+                // let Game component know what's up
+                this.props.tempMove(tempstone);
+                // update board image
+                // if (this.props.scoringOverlay) this.refreshTerritoryMap();
             }
             else { console.log("you can't go there.") } //failed
         })
@@ -106,9 +94,31 @@ class Board extends Component {
         else return null;
     }
 
+    // refreshTerritoryMap() {
+    //     // HACK: refresh the territory map
+    //     this.setState({ territoryMap: [] }); // try deleting this line, I dare you
+    //     // then do it again proper
+    //     this.setState({
+    //         // map out the territory with the stone there
+    //         territoryMap: this.props.ai.scoringOverlay(
+    //             // copying the board with map(), while adding in the tempstone
+    //             this.props.go.board.nodes.map((node, i) => (
+    //                 i === this.state.tempstone.location
+    //                     // drop the tempstone in there so you can see the potential effects of that play
+    //                     ? {
+    //                         stone: this.state.tempstone,
+    //                         neighbors: node.neighbors
+    //                     }
+    //                     // and also drop in all the nodes on the actual board
+    //                     : node
+    //             ))
+    //         )
+    //     })
+    // }
+
     scoringOverlay() {
         return (
-            this.state.territoryMap.map((score, i) =>
+            this.props.territoryMap.map((score, i) =>
             // map score to visuals
                 this.goStone(
                     { 
@@ -131,6 +141,8 @@ class Board extends Component {
         }
         return (
             <div>
+                {/* {this.props.scoringOverlay ? <span style={{ position: "absolute", left: "-300px", color: "white"}}>{this.currentScore()}</span> : null} */}
+
                 {/* board image */}
                 <img src={goboard} id="boardImg" style={boardSize} alt="game board"></img>
 

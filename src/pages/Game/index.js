@@ -36,7 +36,8 @@ class Game extends Component {
         online: false,
         opponent: {},
         contextMenu: false,
-        scoringOverlay: false
+        scoringOverlay: false,
+        territoryMap: [] // for real-time scoring
     }
 
     componentWillMount() {
@@ -44,11 +45,13 @@ class Game extends Component {
         console.log("loading game page with query string: ", query)
         // offline games will have query strings specifying the board type and dimensions
         if (query.boardType !== undefined && query.boardSize) {
+            // this is an offline game
             // set up state
             this.setState({
                 game: {
                     gameMode: parseInt(query.boardType),
                     boardSize: parseInt(query.boardSize),
+                    aiPlayer: (query.AIplayer ? true : false)
                 }
             }, this.startGame);
         }
@@ -90,6 +93,23 @@ class Game extends Component {
         }
     }
 
+    componentDidUpdate() {
+        if (this.state.game.aiPlayer && !localPlayer.isTurn) {
+            // AI, choose a move
+            let predictedSequence = ai.selectMove(go.board.nodes, go.stone.white, 2, true);
+            console.log("ai predicts: ", predictedSequence);
+            // play the move. it will now be black's turn again...
+            this.move(predictedSequence[0].location >= 0 ? predictedSequence[0].location : -2);
+            localPlayer.isTurn = true;
+            HexaSphere.isTurn = true;
+            this.setState({
+                opponent: { ...this.state.opponent, username: "computer" }
+            })
+            // refresh territory to show how it's changed after that move
+            this.refreshTerritoryMap();
+        }
+    }
+
     startGame() {
         // this will be called once the state is finished setting
         console.log("game parameters: ", this.state.game);
@@ -119,9 +139,6 @@ class Game extends Component {
         else {
             console.log("unrecognized game mode:", this.state.game.gameMode);
         }
-
-        // load AI
-        ai.initialize(go);
 
         // for an online game, load players
         if (this.state.game.online) {
@@ -155,13 +172,19 @@ class Game extends Component {
             })
         } 
         else {
-            // if not online, there is no local stone color because both sides are local
+            // starting offline game
+            localPlayer.color = 0;
+            // default players
+            if (this.state.game.aiPlayer) {
+                localPlayer.username = "human";
+                this.setState({ opponent: { username: "computer", color: 1 }, loaded: true });
+            } 
+            else {
+                localPlayer.username = "player1";
+                this.setState({ opponent: { username: "player2", color: 1 }, loaded: true });
+            }
             localPlayer.isTurn = true;
             HexaSphere.isTurn = true;
-            // default players
-            localPlayer.username = "player1";
-            localPlayer.color = 0;
-            this.setState({opponent: {username: "player2", color: 1}, loaded: true});
         }
 
     }
@@ -186,17 +209,22 @@ class Game extends Component {
                 // animate the stones disappearing
                 HexaSphere.captureStones(go.capturedStones);
             }
+
+            // is the scoring overlay on?
+            if (this.state.scoringOverlay) {
+                this.refreshTerritoryMap();
+            }
         }
-        else {
+        else if (location === -1) {
             // "ping" move
+        }
+        else if (location === -2) {
+            // pass
+            go.PassTurn();
         }
 
         // offline game
         if (!this.state.game.online) {
-            // when not online, it's always localPlayer's turn
-            localPlayer.isTurn = true;
-            // if on hexasphere
-            HexaSphere.isTurn = localPlayer.isTurn;
             // change whose turn it is
             this.setState({
                 game: {
@@ -207,6 +235,19 @@ class Game extends Component {
                     )
                 }
             });
+            // use ai to select a move
+            if (this.state.game.aiPlayer && go.turn === go.stone.white) {
+                // set it to AI's turn.  
+                // the rest of this happens in componentDidUpdate,
+                // so there's time to update before the process freezes up.
+                localPlayer.isTurn = false;
+                HexaSphere.isTurn = false;
+                // show that the computer is thinking
+                // which also triggers an update
+                this.setState({
+                    opponent: { ...this.state.opponent, username: "computer - thinking..."}
+                })
+            }
         }
         // online game
         else {
@@ -301,6 +342,11 @@ class Game extends Component {
 
     }
 
+    tempMove = (tempstone) => {
+        // when the temp stone moves
+        this.refreshTerritoryMap(tempstone)
+    }
+
     contextMenu = (event) => {
         event.preventDefault();
         // right-click menu to cha nge view
@@ -318,6 +364,36 @@ class Game extends Component {
             // close the menu
             this.setState({contextMenu: false})
         }
+    }
+
+    currentScore() {
+        let score = this.state.territoryMap.reduce((sum, node) => {
+            return sum + node;
+        }, 0)
+        return Math.abs(score) + (score > 0 ? " for black" : " for white");
+    }
+
+    refreshTerritoryMap(tempstone) {
+        // HACK: refresh the territory map
+        this.setState({ territoryMap: [] }); // try deleting this line, I dare you
+        // then do it again proper
+        // // ok maybe just do it once??  (NOPE)
+        this.setState({
+            // map out the territory with the stone there
+            territoryMap: ai.scoringOverlay(
+                // copying the board with map(), while adding in the tempstone
+                tempstone ? go.board.nodes.map((node, i) => (
+                    i === tempstone.location
+                        // drop the tempstone in there so you can see the potential effects of that play
+                        ? {
+                            stone: tempstone,
+                            neighbors: node.neighbors
+                        }
+                        // and also drop in all the nodes on the actual board
+                        : node
+                )) : go.board.nodes
+            )
+        })
     }
 
     onClickMenu = (index) => {
@@ -345,17 +421,29 @@ class Game extends Component {
             <div id='gameCanvas' onClick={this.closeContextMenu}>
                 {
                     // infoPanel shows game menu, chat, and whose turn it is
-                    this.state.game.online
-                    ? <InfoPanel localPlayer={localPlayer} opponent={this.state.opponent} game={this.state.game} chatHistory={this.state.chat}/>
-                    : <button onClick={() => exitToHome(this.state.game.history.length)}>home page</button>
+                    // this.state.online ?
+                    <InfoPanel
+                        localPlayer={localPlayer}
+                        opponent={this.state.opponent}
+                        game={this.state.game}
+                        chatHistory={this.state.chat}
+                        online={this.state.online}
+                        showScore={this.state.game.scoringOverlay}
+                        currentScore={this.currentScore()}
+                        pass={() => this.move(-2)}
+                    />
+                    // : <button onClick={() => exitToHome(this.state.game.history.length)}>home page</button>
                 }
                 { /* boardContainer just contains the board */}
-                <div id="boardContainer" onContextMenu={this.contextMenu} className={this.state.game.online ? "" : "offline"}>
+                <div id="boardContainer" onContextMenu={this.contextMenu} > {/* className={this.state.game.online ? "" : "offline"}> */}
                     {this.state.loaded
                         ?(this.state.game.gameMode === 0
                             ? <StandardBoard {...this.state.game} go={go} ai={ai}
-                                isTurn={localPlayer.isTurn} playFunction={this.move}
-                                online={this.state.game.online}/>
+                                isTurn={localPlayer.isTurn}
+                                move={this.move}
+                                tempMove={this.tempMove}
+                                online={this.state.game.online}
+                                territoryMap={this.state.territoryMap} />
                             // hexaboard is not going to be a react component.
                             // it is just better that way.
                                 : null)
