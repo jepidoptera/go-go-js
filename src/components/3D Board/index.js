@@ -87,6 +87,14 @@ const HexaSphere = {
         // animate
         const animate = () => {
             // test.rotate(this.sphere);
+            if (this.axis && this.angle) {
+                // lerp into it
+                this.sphere.rotateOnWorldAxis(this.axis, this.angle * .1);
+                this.angle *= .9;
+                if (this.angle < .01) {
+                    this.angle = 0; this.axis = null;
+                }
+            }
             if (this.camera) requestAnimationFrame(animate);
             renderer.render(HexaSphere.scene, this.camera);
         }
@@ -105,11 +113,14 @@ const HexaSphere = {
             };                    
             culumlativeMotion = 0;
             $(canvas).on('mousemove', dragRotate);
+            // $(canvas).on('scroll', dragRotate);
         });
 
         $("body").on("mouseup", function (event) {
             // let off the mouse drag
             $(canvas).off('mousemove', dragRotate);
+            // $(canvas).off('scroll', dragRotate);
+
             // determine if that was a click or a drag
             if (culumlativeMotion < 10) {
                 // didn't move much, that counts as a click
@@ -185,6 +196,9 @@ const HexaSphere = {
                 }
                 // align the click to the nearest node
                 clickedAt = nearestNode.position;
+
+                // rotate to the clicked point (this is a workaround for rotation on mobile)
+                this.rotateTowards(clickedAt);
                 
                 // if the click was anywhere except an already-placed temp stone
                 // then add a transparent temp; click it again to make it a real move.
@@ -295,11 +309,10 @@ const HexaSphere = {
         // can't mess with the actual target vector,
         // because it's a reference to one of the nodes on our graph :|
         let adjustedTarget = this.sphere.localToWorld(new THREE.Vector3(target.x, target.y, target.z));
-        let axis = new THREE.Vector3()
+        this.axis = new THREE.Vector3()
             .crossVectors(adjustedTarget, this.camera.position).normalize();
-        let angle = this.camera.position.angleTo(adjustedTarget);
+        this.angle = this.camera.position.angleTo(adjustedTarget);
         // console.log("rotating on axis:", axis, " by angle ", angle);
-        this.sphere.rotateOnWorldAxis(axis, angle);
         // console.log("sphere ends at rotation:", this.sphere.rotation, "position:", this.sphere.position)
     },
 
