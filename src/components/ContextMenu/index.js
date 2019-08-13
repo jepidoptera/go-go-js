@@ -9,7 +9,7 @@ export default function Menu(props) {
     }
     return (
         <div style={Style} className='contextMenu'>
-            <div className="menuItem" onClick={() => props.onClick(0)}>
+            <div className="contextMenuItem" onClick={() => props.onClick(0)}>
                 {props.scoringOverlay
                     ? "✔ "
                     : "  "

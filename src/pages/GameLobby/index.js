@@ -13,6 +13,7 @@ class GameLobby extends Component {
         allgames: [],
         games: [],
         challengeGames: 0,
+        ongoingGames: 0,
         selectedTab: "ongoing",
         loadGameInterval: null
     }
@@ -71,7 +72,7 @@ class GameLobby extends Component {
         api.loadAllGames(function(games) {
             // let's see what we've got
             self.setState({allgames: JSON.parse(games)});
-            console.log("loaded games: ", self.state.allgames);
+            // console.log("loaded games: ", self.state.allgames);
             // run callback if there is one
             if (callback) callback();
         })
@@ -89,7 +90,20 @@ class GameLobby extends Component {
         switch (tabname) {
             case ("ongoing"): {
                 // find games which this player is involved in, and which have already started
-                games = games.filter(this.ongoingFilter)
+                games = games.filter(this.ongoingFilter).sort((a, b) => {
+                    // put the ones where it's your turn on top
+                    if (a.currentPlayer === localPlayer.username && b.currentPlayer === localPlayer.username) {
+                        // prioritize the newest one first
+                        return (a.history.length < b.history.length ? -1 : 1)
+                    }
+                    // cases where it's your turn in one of the games but not the other
+                    else if (a.currentPlayer === localPlayer.username) {
+                        return -1;
+                    }
+                    else return 1;
+                });
+                // show all ongoing games as having been seen
+                this.setState({ ongoingGames: this.state.allgames.filter(this.ongoingFilter).length });
                 break;
             }
             case ("open"): {
@@ -106,7 +120,9 @@ class GameLobby extends Component {
             default: break;
         }
         // challenge games get their own special little icon
-        this.setState({ challengeGames: this.state.allgames.filter(this.challengeFilter).length })
+        this.setState({
+            challengeGames: this.state.allgames.filter(this.challengeFilter).length
+        })
         this.setState({ games: games, selectedTab: tabname });
     }
 
@@ -144,6 +160,8 @@ class GameLobby extends Component {
     }
 
     render() {
+        const bgStyle = (i) => { return { backgroundColor: (i % 2 === 0 ? "#ffffff" : "#dddddd") } };
+
         return (
             <div id="gameLobby">
                 <h3>Ethereum Go game lobby
@@ -158,13 +176,26 @@ class GameLobby extends Component {
 
                 <div id="tabButtons">
                     <button className={"tabButton" + (this.state.selectedTab === "ongoing" ? " selected" : "")}
-                        onClick={() => this.setTab("ongoing")} id="Ongoing">Ongoing</button>
+                        onClick={() => this.setTab("ongoing")} id="Ongoing">
+                        Ongoing
+                        {
+                        // notification for ongoing games you haven't seen yet (challenges which have been accepted)
+                        this.state.allgames.filter(this.ongoingFilter).length - this.state.ongoingGames > 0
+                            ? <span className="challengeIcon">
+                                {this.state.allgames.filter(this.ongoingFilter).length - this.state.ongoingGames}
+                            </span>
+                            : ''
+                        }
+                    </button>
                     <button className={"tabButton" + (this.state.selectedTab === "open" ? " selected" : "")}
-                        onClick={() => this.setTab("open")} id="Open">Open</button>
+                        onClick={() => this.setTab("open")} id="Open">
+                            Open
+                        </button>
                     <button className={"tabButton" + (this.state.selectedTab === "challenge" ? " selected" : "")}
                         onClick={() => this.setTab("challenge")} id="Challenge">
                             Challenge
                             {
+                                // notifications for challenges personally issued to you
                                 this.state.challengeGames > 0
                                 ? <span className="challengeIcon">{this.state.challengeGames}</span>
                                 : ''
@@ -219,7 +250,7 @@ class GameLobby extends Component {
                         {/* all the games in the selected list filter */}
                         {this.state.games.map((game, i) => {
                             return (
-                                <tr key={i}>
+                                <tr style={bgStyle(i)} key={i}>
                                     {this.state.selectedTab !== "challenge"
                                         ? (<td><button className="actionBtn" onClick={() => this.joinGame(game.Id)}>Join</button></td>)
                                         : (<td>
@@ -229,11 +260,16 @@ class GameLobby extends Component {
                                     }
                                     {/* for an ongoing game, show whichever player is not you */}
                                     <td>{(game.white !== localPlayer.username ? game.white : game.black)}</td>
+                                    {/* and show whose turn it currently is */}
                                     <td>{
                                         this.state.selectedTab !== "challenge"
                                             ? (
                                                 this.state.selectedTab === "ongoing"
-                                                ? `move ${game.history.length / 3 - 1} - ${game.currentPlayer}'s turn.`
+                                                    ? `move ${game.history.length / 3} - ${
+                                                        (game.currentPlayer !== localPlayer.username
+                                                            ? game.currentPlayer + "'s"
+                                                            : "your")
+                                                    } turn.`
                                                 : "waiting for opponent."
                                             )
                                             : "gauntlet thrown."

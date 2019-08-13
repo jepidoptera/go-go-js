@@ -1,3 +1,7 @@
+body, html {
+    overflow: scroll;
+}
+
 #gameLobby {
     display: block;
     position: relative;
@@ -5,6 +9,7 @@
     max-width: 1000px;
     left: 50%;
     transform: translate(-50%);
+    overflow: scroll;
 }
 
 #gamesTable {
@@ -50,7 +55,7 @@ td, th {
     border: 1px solid black;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    margin: 0 20px -1px 20px;
+    margin: 0 15px -1px 15px;
     font-size: 14pt;
     background-color: white;
 }
@@ -76,7 +81,7 @@ td, th {
     line-height: 18px;
     vertical-align: middle;
     text-align: center;
-    text-weight: 900;
+    font-weight: 900;
     border: 1px solid black;
     margin-left: 8px;
 }

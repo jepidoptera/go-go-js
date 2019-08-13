@@ -11,6 +11,8 @@ var go = {
     nodes: [],
     koStone: null,
     nullStone: null,
+    gameOver: false,
+    lastMove: null,
     
     Player: class {
         constructor(color, name) {
@@ -201,6 +203,8 @@ var go = {
         }
 
         // played successfully
+        this.lastMove = location;
+        
         // console.log("played at: ", location);
         if (captures.length > 0) console.log("stones captured: ", this.capturedStones);
 
@@ -249,6 +253,7 @@ var go = {
 
     GameOver : function () {
         // TODO
+        this.gameOver = true;
     },
 
     // create a list of points which contain stones which would be captured 

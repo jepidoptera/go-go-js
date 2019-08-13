@@ -61,7 +61,6 @@ class InfoPanel extends Component {
             </div>
             <span id="localPlayerName">
                 Playing as {this.props.localPlayer.username}
-                <button className="inlineBtn" onClick={this.props.pass}>pass</button>
                 {this.props.game.online
                     ? <button className="inlineBtn" onClick={this.showMenu}>
                         ≡
@@ -73,8 +72,6 @@ class InfoPanel extends Component {
                 <button onClick={backToLobby} className="inlineBtn menuItem">return to lobby</button>
                 <br></br>
                 <button onClick={logOut} className="inlineBtn menuItem">log out</button>
-                <br></br>
-                <button onClick={nextGame} className="inlineBtn menuItem">log out</button>
             </div>
             <br></br>
             <span id="gameInfo">
@@ -86,11 +83,16 @@ class InfoPanel extends Component {
                     ? "invert"
                     : ""
             }>
-                {this.props.localPlayer.isTurn
+                {(this.props.localPlayer.isTurn && this.props.online)
                     ? "your "
                     : this.props.game.currentPlayer + "'s "}
                 turn.
+                {(this.props.localPlayer.isTurn && this.props.online)
+                    // pass button
+                    ? <button className="inlineBtn" onClick={this.props.pass}>pass</button>
+                    : null}
             </span>
+            
             {this.props.showScore ?
                 <div> {this.props.currentScore} </div>
             : null}

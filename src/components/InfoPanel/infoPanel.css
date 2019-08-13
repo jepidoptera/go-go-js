@@ -2,7 +2,6 @@
     height: 100vh;
     width: 100%;
     max-width: Calc(100vmax - 100vmin);
-    max-width: 50%;
     top: 0;
     left: 0;
     background-color: white;
@@ -44,6 +43,7 @@
     display: flex;
     flex-direction: column;
     margin: 10px;
+    width: Calc(100% - 20px)
 }
 #chatHistory {
     flex: 1;
@@ -70,6 +70,7 @@
 }
 .inlineBtn {
     z-index: -1;
+    display: inline-block;
 }
 button:focus {
     outline:0;
@@ -83,21 +84,23 @@ button:focus {
     left: 0;
 }
 .menu {
-    box-sizing: border-box;
     display: none;
     position: absolute;
     z-index: 10;
     top: 20pt;
-    width: Calc(100% - 20px);
+    margin: 10px;
+    width: Calc(100% - 38px);
     background-color: white;
     height: 80px;
     border: 1px solid black;
     padding: 10px;
-    margin: 10px;
 }
 
 .menuItem {
     width: 50%;
+}
+.menuItem:hover {
+    background-color: orange;
 }
 
 .show {
@@ -111,6 +114,7 @@ button:focus {
     position: absolute;
     width: 100vw;
     height: 100vh;
+    z-index: 9;
 }
 
 @media screen and (orientation:portrait) {
@@ -126,6 +130,8 @@ button:focus {
     #infoPanel {
         height: 100%;
         width: 100%;
+        max-width: 100%;
+        max-height: 100%;
     }
 }
 

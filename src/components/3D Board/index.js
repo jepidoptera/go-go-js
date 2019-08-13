@@ -265,6 +265,7 @@ const HexaSphere = {
                 newStones.push(node.stone);
             }
         })
+        this.rotateTowards(go.board.nodes[go.lastMove].position);
         console.log("Replaying history: ", newStones);
     },
 

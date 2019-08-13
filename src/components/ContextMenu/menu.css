@@ -7,9 +7,9 @@
     cursor: pointer;
     user-select: none
 }
-.menuItem {
+.contextMenuItem {
     width: 100%;
 }
-.menuItem:hover {
+.contextMenuItem:hover {
     background-color: orange;
 }

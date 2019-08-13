@@ -24,11 +24,11 @@
     overflow: hidden;
 }
 
-#boardContainer.offline {
+/* #boardContainer.offline {
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-}
+} */
 
 @media screen and (orientation:portrait) {
     #boardContainer {
