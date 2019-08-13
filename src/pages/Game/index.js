@@ -177,7 +177,11 @@ class Game extends Component {
             // default players
             if (this.state.game.aiPlayer) {
                 localPlayer.username = "human";
-                this.setState({ opponent: { username: "computer", color: 1 }, loaded: true });
+                this.setState({
+                    opponent: { username: "computer", color: 1 },
+                    loaded: true,
+                    game: {...this.state.game, currentPlayer: "human"}
+                });
             } 
             else {
                 localPlayer.username = "player1";
