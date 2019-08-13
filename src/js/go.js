@@ -11,6 +11,7 @@ var go = {
     nodes: [],
     koStone: null,
     nullStone: null,
+    gameOver: false,
     
     Player: class {
         constructor(color, name) {
@@ -36,7 +37,7 @@ var go = {
         pass: 2,
         lake: 3,
         illegal: 9,
-        gameover: 10,
+        gameOver: 10,
         joingame: 11,
         ping: 15
     },
@@ -249,6 +250,7 @@ var go = {
 
     GameOver : function () {
         // TODO
+        this.gameOver = true;
     },
 
     // create a list of points which contain stones which would be captured 

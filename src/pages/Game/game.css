@@ -9,13 +9,13 @@
 #GameComponent {
     height: 100%;
     width: 100%;
+    overflow: hidden;
 }
 
 #boardContainer {
     position: absolute;
     height: 100vmin;
     width: 100vmin;
-    overflow: hidden;
     display: block;
     top: 0;
     right: 0;

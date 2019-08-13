@@ -37,7 +37,8 @@ class Game extends Component {
         opponent: {},
         contextMenu: false,
         scoringOverlay: false,
-        territoryMap: [] // for real-time scoring
+        territoryMap: [], // for real-time scoring
+        finalScore: null
     }
 
     componentWillMount() {
@@ -97,9 +98,12 @@ class Game extends Component {
         if (this.state.game.aiPlayer && !localPlayer.isTurn) {
             // AI, choose a move
             let predictedSequence = ai.selectMove(go.board.nodes, go.stone.white, 2, true);
-            console.log("ai predicts: ", predictedSequence);
             // play the move. it will now be black's turn again...
-            this.move(predictedSequence[0].location >= 0 ? predictedSequence[0].location : -2);
+            if (predictedSequence[0].location > 0) {
+                this.move(predictedSequence[0].location, this.state.opponent.color);
+            }
+            else 
+                this.move(-1, go.Opcodes.pass)
             localPlayer.isTurn = true;
             HexaSphere.isTurn = true;
             this.setState({
@@ -189,8 +193,8 @@ class Game extends Component {
 
     }
 
-    move = (location) => {
-        if (location >= 0) {
+    move = (location, opcode = go.turn) => {
+        if ([go.stone.black, go.stone.white].includes(opcode)) {
             // a move has been made
             // move will have already been validated, so I guess we don't need to again?
 
@@ -215,12 +219,23 @@ class Game extends Component {
                 this.refreshTerritoryMap();
             }
         }
-        else if (location === -1) {
+        else if (opcode === go.Opcodes.ping) {
             // "ping" move
         }
-        else if (location === -2) {
+        else if (opcode === go.Opcodes.pass) {
             // pass
             go.PassTurn();
+        }
+        else if (opcode === go.Opcodes.gameOver) {
+            // TODO
+            // get the actual score
+            this.setState({
+                finalScore: go.Score()
+            })
+            // get rid of the captured stones
+            // set scores to eiher one or zero
+            // subtract 6.5 from black to even things out
+            // display the final score
         }
 
         // offline game
@@ -262,9 +277,10 @@ class Game extends Component {
             let x = parseInt(location / 256);
             let y = parseInt(location % 256);
 
-            let ping = location === -1 ? go.Opcodes.ping : 0;
-            let pass = location === -2 ? go.Opcodes.pass : 0;
-
+            let ping = location === go.Opcodes.ping ? go.Opcodes.ping : 0;
+            let pass = location === go.Opcodes.pass ? go.Opcodes.pass : 0;
+            let gameOver = location === go.Opcodes.pass ? go.Opcodes.gameover : 0;
+            
             console.log("broadcasting move: ", x, y, ping || pass || localPlayer.color);
             // call the api
             api.makeMove(
@@ -291,18 +307,22 @@ class Game extends Component {
                         if (!go.TryPlayStone(location, opcode)) {
                             console.log("error: illegal move ", move[0], move[1], move[2], " by opponent.")
                         }
-                        else if (this.state.game.gameMode === 2 && opcode !== go.Opcodes.pass) {
+                        else if (this.state.game.gameMode === 2
+                            && [go.stone.white, go.stone.black].includes(opcode)) {
                             // mark hex board while it's still the correct turn
                             HexaSphere.addStone(this.state.opponent.color, location);
                             // rotate to show the latest move
                             HexaSphere.rotateTowards(HexaSphere.nodes[location].position);
                         }
-                        if (opcode !== go.Opcodes.pass)
-                            // place a stone where opponent played
-                            go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
-                        else
+                        if (opcode === go.Opcodes.pass)
                             // opponent chose to pass
                             go.PassTurn();
+                        else if (opcode === go.Opcodes.gameover)
+                            // game over
+                            go.GameOver();
+                        else
+                            // place a stone where opponent played
+                            go.PlayStone(move[0] * 256 + move[1], this.state.opponent.color)
 
                         // were any stones captured?
                         if (this.state.game.gameMode === 2 && go.capturedStones.length > 0) {
@@ -455,7 +475,6 @@ class Game extends Component {
                     ? <ContextMenu {...this.state.contextMenu} onClick={this.onClickMenu}></ContextMenu>
                     : null
                 }
-                {this.state.game.scoringOverlay}
             </div>
         )
     }

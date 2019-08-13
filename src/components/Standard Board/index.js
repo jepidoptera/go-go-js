@@ -119,15 +119,15 @@ class Board extends Component {
     scoringOverlay() {
         return (
             this.props.territoryMap.map((score, i) =>
-            // map score to visuals
+                // map score to visuals
                 this.goStone(
-                    { 
+                    {
                         color: (score > 0 ? this.props.go.stone.black : this.props.go.stone.white),
                         location: i
                     },
                     "marker",
                     // size
-                    0.5 - 0.5 / 2 ** Math.abs(score || 0)
+                    0.5 * Math.abs(score) // - 0.5 / 2 ** Math.abs(score || 0)
                 )
             )
         )

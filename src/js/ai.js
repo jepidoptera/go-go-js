@@ -30,17 +30,25 @@ const AI = {
                 let n = groups[g].neighborNodes[i];
                 // calculate the color balance of its neighbors
                 groups[g].territoryBalance += (colorScore[nodes[n].stone.color] || 0);
-                let neighborGroup = groups[groupOf[n]];
-                // does this node belong to a group that hasn't been cataloged yet?
-                if (!groups[g].neighborGroups.includes(neighborGroup)) {
-                    // found a new one
-                    groups[g].neighborGroups.push(neighborGroup);
-                }
+                // let neighborGroup = groups[groupOf[n]];
+                // //  does this node belong to a group that hasn't been cataloged yet?
+                // if (!groups[g].neighborGroups.includes(neighborGroup)) {
+                //     // found a new one
+                //     groups[g].neighborGroups.push(neighborGroup);
+                // }
             }
             if (groups[g].owner === go.nullStone.color) {
+                // normalize
+                groups[g].territoryBalance /= (groups[g].neighborNodes.length + groups[g].members.length);
                 // fill in territory balance as initial node score for empty zones
                 for (let m = 0; m < groups[g].members.length; m++) {
                     nodeControl[groups[g].members[m]] = groups[g].territoryBalance;
+                }
+            }
+            else {
+                // assign stone to owner
+                for (let m = 0; m < groups[g].members.length; m++) {
+                    nodeControl[groups[g].members[m]] = colorScore[groups[g].owner];
                 }
             }
         }
@@ -93,35 +101,34 @@ const AI = {
                     // capture! this group is owned by the other team
                     groups[g].owner = otherColor(groups[g].owner);
                     // score 100 points per stone - arbitrarily
-                    penalty = 1000;
+                    penalty = 1;
                 }
                 else if (groups[g].liberties < 2) {
                     // groups that are in Atari generate zero control
-                    groups[g].owner = otherColor(groups[g].owner);
+                    // groups[g].owner = otherColor(groups[g].owner);
                     // also lose ten points per stone
-                    penalty = 100;
+                    penalty = 0.5;
                 }
                 // subtract a scoring penalty
                 if (penalty) {
                     for (let m = 0; m < groups[g].members.length; m++) {
-                        nodeControl[groups[g].members[m]] = penalty * colorScore[groups[g].owner];
+                        nodeControl[groups[g].members[m]] -= penalty * colorScore[groups[g].owner];
                     }
                 }
             }
         }
 
         // groups radiate control out into empty territory
-        let nodeControlMask = [];
+        let nodeControlMask = Array(nodes.length).fill(0);
         for (let i = 0; i < 3; i++) {
             for (let g = 0; g < groups.length; g++) {
                 if (groups[g].owner >= 0) {
                     // each group can radiate control
-                    let groupPower = Math.min(groups[g].members.length, 6) + Math.min(groups[g].liberties, 7) + groups[g].eyes;
+                    let groupPower = (Math.min(groups[g].members.length, 6) + Math.min(groups[g].liberties, 7) + groups[g].eyes) / 14;
                     for (let n = 0; n < groups[g].neighborNodes.length; n++) {
                         if (nodes[groups[g].neighborNodes[n]].stone === go.nullStone) {
                             nodeControlMask[groups[g].neighborNodes[n]] =
-                                (nodeControlMask[groups[g].neighborNodes[n]] || 0)
-                                + groupPower * colorScore[groups[g].owner];
+                                Math.min(1, nodeControlMask[groups[g].neighborNodes[n]] + groupPower * colorScore[groups[g].owner]);
                         }
                     }
                 }
@@ -129,11 +136,11 @@ const AI = {
             // add mask to control array
             for (let n = 0; n < nodes.length; n++) {
                 if (nodeControlMask[n]) {
-                    nodeControl[n] = (nodeControl[n] || 0) + nodeControlMask[n];
+                    nodeControl[n] = Math.min(1, nodeControlMask[n]);
                     nodeControlMask[n] = 0;
                 }
             }
-            // blur and fade
+            // // blur and fade
             if (i < 2) {
                 for (let n = 0; n < nodes.length; n++) {
                     if (nodes[n].stone === go.nullStone) {
@@ -151,22 +158,22 @@ const AI = {
 
         // score the stones of each group itself
         // baseline 50 points per stone, but less if their "air quality" is bad
-        for (let g = 0; g < groups.length; g++) {
-            if (groups[g].owner !== go.nullStone.color) {
-                let airQuality = groups[g].neighborNodes.reduce((sum, n) =>
-                    sum + Math.max(0, nodeControl[n] * colorScore[groups[g].owner])
-                    , 0);
-                // gonna set the magic number to 8
-                // something less arbitrary would be preferrable, but with current settings...
-                // this guarantees that a group with two eyes has enough to be declared "live"
-                let scorePerStone = 50;
-                if (airQuality < Math.min(groups[g].members.length, 8)) scorePerStone = 0;
-                if (airQuality === 0) scorePerStone = -50;
-                for (let m = 0; m < groups[g].members.length; m++) {
-                    nodeControl[groups[g].members[m]] += scorePerStone * colorScore[groups[g].owner];
-                }
-            }
-        }
+        // for (let g = 0; g < groups.length; g++) {
+        //     if (groups[g].owner !== go.nullStone.color) {
+        //         let airQuality = groups[g].neighborNodes.reduce((sum, n) =>
+        //             sum + Math.max(0, nodeControl[n] * colorScore[groups[g].owner])
+        //             , 0);
+        //         // gonna set the magic number to 8
+        //         // something less arbitrary would be preferrable, but with current settings...
+        //         // this guarantees that a group with two eyes has enough to be declared "live"
+        //         let scorePerStone = .5;
+        //         if (airQuality < Math.min(groups[g].members.length, 8)) scorePerStone = 0;
+        //         if (airQuality === 0) scorePerStone = -.5;
+        //         for (let m = 0; m < groups[g].members.length; m++) {
+        //             nodeControl[groups[g].members[m]] += scorePerStone * colorScore[groups[g].owner];
+        //         }
+        //     }
+        // }
 
         // let each stone 'radiate' control four times
         // for (let i = 0; i < 3; i++) {            
@@ -207,26 +214,29 @@ const AI = {
         // let's see what we've got
         // console.log("board separated into: ", groups);
 
-        // debug display
-        // console.log("control array:");
-        // let displayString = '';
-        // for (let y = 0; y < go.board.size; y++) {
-        //     for (let x = 0; x < go.board.size; x++) {
-        //         let n = go.indexFromCoors(x, y);
-        //         let nodeString = '';
-        //         if (nodeControl[n]) nodeString += nodeControl[n].toString();
-        //         else nodeString = '0';
-        //         nodeString = ' '.repeat(4 - nodeString.length) + nodeString;
-        //         displayString += nodeString;
-        //         if (n % go.board.size === go.board.size - 1) {
-        //         }
-        //     }
-        //     console.log(displayString);
-        //     displayString = '';
-        // }
-
 
         return nodeControl;
+    },
+
+    logScore() {
+        // debug display
+        let nodeControl = this.assessBoard();
+        console.log("control array:");
+        let displayString = '';
+        for (let y = 0; y < go.board.size; y++) {
+            for (let x = 0; x < go.board.size; x++) {
+                let n = go.indexFromCoors(x, y);
+                let nodeString = '';
+                if (nodeControl[n]) nodeString = nodeControl[n].toString().slice(0, 4);
+                else nodeString = "0";
+                nodeString = ' '.repeat(5 - nodeString.length) + nodeString;
+                displayString += nodeString;
+                if (n % go.board.size === go.board.size - 1) {
+                }
+            }
+            console.log(displayString);
+            displayString = '';
+        }
     },
 
     totalScore(nodes) {
@@ -251,7 +261,7 @@ const AI = {
         return nodeControl;
     },
 
-    selectMove(nodes, color, levelsDeep = 1, returnWholeStack = false) {
+    selectMove(nodes, color, levelsDeep = 1, returnWholeStack = false, topLevel = true) {
         if (nodes === undefined) nodes = go.board.nodes;
         if (levelsDeep < 0) return -1;
         // let's not get crazy here
@@ -291,7 +301,7 @@ const AI = {
                             (n === l ? { ...node, stone: new go.Stone(nexturn, l) } : node)),
                         turn,
                         levelsDeep - r,
-                        'return whole stack'))
+                        'return whole stack', false))
                     // console.log("exploring move", i);
                 }
                 let moveScore = 0;
@@ -329,6 +339,10 @@ const AI = {
         
         if (bestMoves[0].location === -1) {
             console.log('ai chooses to pass');
+        }
+
+        if (topLevel) {
+            console.log("ai predicts: ", bestMoves);
         }
         // this is in theory the best move
         // either return just the one, or the whole stack, depending
