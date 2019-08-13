@@ -96,7 +96,9 @@ class Game extends Component {
     componentDidUpdate() {
         if (this.state.game.aiPlayer && !localPlayer.isTurn) {
             // AI, choose a move
-            let predictedSequence = ai.selectMove(go.board.nodes, go.stone.white, 2, true);
+            let predictedSequence = (go.board.nodes.length < 100
+                ? ai.selectMove(go.board.nodes, go.stone.white, 2, true)
+                : ai.selectMove(go.board.nodes, go.stone.white, 1, true));
             console.log("ai predicts: ", predictedSequence);
             // play the move. it will now be black's turn again...
             this.move(predictedSequence[0].location >= 0 ? predictedSequence[0].location : -2);
