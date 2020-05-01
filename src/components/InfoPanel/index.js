@@ -78,18 +78,16 @@ class InfoPanel extends Component {
                 {this.props.game.description} vs {this.props.opponent.username}
             </span>
             <span id="turnIndicator" className={
-                this.props.game.currentPlayer === this.props.localPlayer.username
+                this.props.localPlayer.isTurn
                     // invert (black on white) when it's local player's turn
                     ? "invert"
                     : ""
             }>
-                {this.props.game.aiPlayer
-                ? ""
-                : ((this.props.game.currentPlayer === this.props.localPlayer.username && this.props.online)
+                {(this.props.localPlayer.isTurn && this.props.online)
                     ? "your "
-                    : this.props.game.currentPlayer + "'s ") + "turn."}
-                
-                {(this.props.game.currentPlayer === this.props.localPlayer.username)
+                    : this.props.game.currentPlayer + "'s "}
+                turn.
+                {(this.props.localPlayer.isTurn && this.props.online)
                     // pass button
                     ? <button className="inlineBtn" onClick={this.props.pass}>pass</button>
                     : null}
@@ -133,6 +131,10 @@ function backToLobby() {
 function logOut() {
     // return to game lobby
     window.location.href = "/"
+}
+
+function nextGame() {
+    // find the next game where it it your turn
 }
 
 export default InfoPanel;

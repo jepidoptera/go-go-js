@@ -8,7 +8,6 @@ import localPlayer from "../../components/LocalPlayer";
 import ContextMenu from "../../components/ContextMenu";
 import ai from "../../js/ai";
 import go from "../../js/go";
-
 // import { resolve } from "path";
 
 function parseQuery(url) {
@@ -32,7 +31,7 @@ function parseQuery(url) {
 
 class Game extends Component {
     state = {
-        game: { Id: 0 }, 
+        game: { Id: 0 },
         chat: [],
         online: false,
         opponent: {},
@@ -106,12 +105,9 @@ class Game extends Component {
             localPlayer.isTurn = true;
             HexaSphere.isTurn = true;
             this.setState({
-                game: {
-                    ...this.state.game,
-                    currentPlayer: localPlayer.username
-                }
+                opponent: { ...this.state.opponent, username: "computer" }
             })
-        // refresh territory to show how it's changed after that move
+            // refresh territory to show how it's changed after that move
             this.refreshTerritoryMap();
         }
     }
@@ -235,6 +231,16 @@ class Game extends Component {
 
         // offline game
         if (!this.state.game.online) {
+            // change whose turn it is
+            this.setState({
+                game: {
+                    ...this.state.game,
+                    currentPlayer: (go.turn === go.stone.black
+                        ? localPlayer.username
+                        : this.state.opponent.username
+                    )
+                }
+            });
             // use ai to select a move
             if (this.state.game.aiPlayer && go.turn === go.stone.white) {
                 // set it to AI's turn.  
@@ -245,15 +251,12 @@ class Game extends Component {
                 // show that the computer is thinking
                 // which also triggers an update
                 this.setState({
-                    game: {
-                        ...this.state.game,
-                        currentPlayer: 'computer'
-                    }
+                    opponent: { ...this.state.opponent, username: "computer - thinking..."}
                 })
             }
         }
         // online game
-        else if (this.state.game.online) {
+        else {
             // online game - more to do
             // we must wait for the other player to play
             localPlayer.isTurn = false;
@@ -428,13 +431,12 @@ class Game extends Component {
                     <InfoPanel
                         localPlayer={localPlayer}
                         opponent={this.state.opponent}
-                        displayTurn={this.state.displayTurn}
                         game={this.state.game}
                         chatHistory={this.state.chat}
                         online={this.state.online}
                         showScore={this.state.game.scoringOverlay}
                         currentScore={this.currentScore()}
-                        pass={() =>  this.move(-2)}
+                        pass={() => this.move(-2)}
                     />
                     // : <button onClick={() => exitToHome(this.state.game.history.length)}>home page</button>
                 }
