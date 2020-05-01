@@ -1,4 +1,5 @@
 import go from './go';
+import { Colors } from 'three';
 let colorScore = [1, -1];
 const AI = {
     assessBoard(nodes = go.board.nodes) {
@@ -345,5 +346,5 @@ export default AI;
 function otherColor(color) {
     if (color === go.stone.black) return go.stone.white;
     if (color === go.stone.white) return go.stone.black;
-    throw(new Error('color has no opposite.'));
+    throw({message: 'color has no opposite.'});
 }

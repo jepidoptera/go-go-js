@@ -69,6 +69,7 @@ const HexaSphere = {
         // mouse click raycaster
         var canvas = renderer.domElement;
         canvas.setAttribute("id", "3dcanvas");
+        let canvasPosition = $(canvas).position();
         let rayCaster = new THREE.Raycaster();
         let mousePosition = new THREE.Vector2();
         let nearestNode = this.nodes[0];
